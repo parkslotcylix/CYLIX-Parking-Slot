@@ -625,12 +625,16 @@ def toggle_slot():
         slot = get_resp.json()[0]
         current_status = slot['slot_status']
 
-        # Parse timestamp
+        # Parse timestamp - use client's local time as-is
         try:
+            # Client sends ISO format with timezone info
             client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
-            now = client_dt.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        except:
-            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            # Convert to naive datetime in client's timezone (remove timezone info)
+            # This preserves the local time the client sees
+            now = client_dt.replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            print(f"Timestamp parse error: {e}, using server time")
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if current_status == 'Available':
             new_status = 'Occupied'
