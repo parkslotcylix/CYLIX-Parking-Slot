@@ -707,6 +707,7 @@
             const timeEl = document.getElementById('stime' + n);
 
             if (data.new_status === 'Occupied') {
+              // Use the current time (now) for the timestamp, not the server response time
               slotTimestamps[n] = now;
               if (timeValEl) timeValEl.textContent = formatDateTime(now);
               if (timeEl) timeEl.style.display = 'block';

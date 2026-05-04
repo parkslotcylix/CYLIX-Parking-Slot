@@ -360,7 +360,7 @@
     <div class="analytics-card">
       <div class="ac-icon">⏱</div>
       <div class="ac-num" id="ac-duration">0h</div>
-      <div class="ac-label">Avg. Parking Duration</div>
+      <div class="ac-label">Longest Parking Duration</div>
       <div class="ac-change" id="ac-duration-change">+0%</div>
     </div>
     <div class="analytics-card">
@@ -504,19 +504,33 @@
     const completedSessions = filteredHistory.filter(record => (record.status || '').toLowerCase() === 'completed');
     const activeSessions = filteredHistory.filter(record => (record.status || '').toLowerCase() === 'active').length;
     
-    // Use API-calculated average duration if available, otherwise calculate from records
-    let averageDuration = 0;
-    if (apiResponse && apiResponse.avg_duration !== undefined) {
-      averageDuration = apiResponse.avg_duration;
-      console.log(`Using API avg_duration: ${averageDuration}h`);
+    // Calculate maximum duration from completed sessions
+    let maxDuration = 0;
+    if (completedSessions.length > 0) {
+      completedSessions.forEach(record => {
+        let duration = 0;
+        
+        // Try to get duration from duration_hours field first
+        if (record.duration_hours !== undefined && record.duration_hours !== null) {
+          duration = Number(record.duration_hours) || 0;
+        } 
+        // Fallback: calculate from check_in_time and check_out_time
+        else if (record.check_in_time && record.check_out_time) {
+          const checkIn = parseDateTime(record.check_in_time);
+          const checkOut = parseDateTime(record.check_out_time);
+          if (checkIn && checkOut) {
+            duration = (checkOut - checkIn) / (1000 * 60 * 60); // Convert ms to hours
+          }
+        }
+        
+        // Update max if this duration is larger
+        if (duration > maxDuration) {
+          maxDuration = duration;
+        }
+      });
+      console.log(`Calculated max_duration: ${maxDuration.toFixed(2)}h from ${completedSessions.length} completed sessions`);
     } else {
-      const totalDuration = completedSessions.reduce((sum, record) => {
-        // Duration might be in various fields, check all
-        const dur = Number(record.duration_hours) || Number(record.duration) || 0;
-        return sum + dur;
-      }, 0);
-      averageDuration = completedSessions.length ? totalDuration / completedSessions.length : 0;
-      console.log(`Calculated avg_duration: ${averageDuration}h from ${completedSessions.length} sessions`);
+      console.log(`No completed sessions found for max duration calculation`);
     }
 
     const availableSlots = allSlots.filter(slot => (slot.slot_status || '').toLowerCase() === 'available').length;
@@ -542,7 +556,7 @@
     });
 
     document.getElementById('ac-vehicles').textContent = completedSessions.length;
-    document.getElementById('ac-duration').textContent = formatDuration(averageDuration);
+    document.getElementById('ac-duration').textContent = formatDuration(maxDuration);
     document.getElementById('analytics-slots-num').textContent = `${availableSlots}/${totalSlots}`;
     document.getElementById('ac-active-sessions').textContent = `${activeSessions} Active`;
 
