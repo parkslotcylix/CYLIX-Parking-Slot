@@ -438,7 +438,7 @@ def camera_stream():
         try:
             response = requests.get(CAMERA_STREAM_URL, stream=True, timeout=CAMERA_TIMEOUT)
             if response.status_code == 200:
-                for chunk in response.iter_content(chunk_size=1024):
+                for chunk in response.iter_content(chunk_size=4096):
                     if chunk:
                         yield chunk
             else:
@@ -448,13 +448,21 @@ def camera_stream():
         except Exception as e:
             print(f"Stream error: {e}")
     
+    # Get headers from ESP32 response
+    try:
+        test_response = requests.head(CAMERA_STREAM_URL, timeout=CAMERA_TIMEOUT)
+        content_type = test_response.headers.get('Content-Type', 'multipart/x-mixed-replace; boundary=frame')
+    except:
+        content_type = 'multipart/x-mixed-replace; boundary=frame'
+    
     return Response(
         generate_stream(),
-        mimetype='multipart/x-mixed-replace; boundary=frame',
+        mimetype=content_type,
         headers={
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
-            'Expires': '0'
+            'Expires': '0',
+            'Connection': 'keep-alive'
         }
     )
 
