@@ -16,16 +16,27 @@ from dotenv import load_dotenv
 import json
 import urllib.parse
 
-# Load environment variables
-load_dotenv(override=True)
+# Load environment variables (only from .env if it exists locally)
+try:
+    load_dotenv(override=False)
+except:
+    pass
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Configuration - Supabase REST API (HTTP-based, works on any network)
-SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://bhsofudngyukxkkialwi.supabase.co')
+# Read from environment variables (Render sets these)
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+if not SUPABASE_URL:
+    SUPABASE_URL = 'https://bhsofudngyukxkkialwi.supabase.co'
+    print(f"WARNING: SUPABASE_URL not set in environment, using default: {SUPABASE_URL}")
+
 SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '').strip()
 SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
 SUPABASE_API_KEY = SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY or 'invalid'
+
+print(f"DEBUG: SUPABASE_URL = {SUPABASE_URL}")
+print(f"DEBUG: SUPABASE_API_KEY set = {bool(SUPABASE_API_KEY and SUPABASE_API_KEY != 'invalid')}")
 
 # REST API headers
 SUPABASE_HEADERS = {
