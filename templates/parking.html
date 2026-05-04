@@ -665,10 +665,13 @@
               // Use client-side timestamp if already captured
               timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
             } else if (slot.check_in_time) {
-              // Fall back to DB timestamp
-              slotTimestamps[slotNum] = new Date(slot.check_in_time);
-              timeValEl.textContent = formatDateTime(slot.check_in_time);
-              saveTimestampsToStorage();
+              // Fall back to DB timestamp, but parse it correctly
+              const dbCheckIn = parseDateTime(slot.check_in_time);
+              if (dbCheckIn) {
+                slotTimestamps[slotNum] = dbCheckIn;
+                timeValEl.textContent = formatDateTime(dbCheckIn);
+                saveTimestampsToStorage();
+              }
             }
           } else {
             // Slot is available — clear everything
