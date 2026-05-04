@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, Response
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
 from functools import wraps
 import requests
 import threading
@@ -22,7 +23,7 @@ try:
 except:
     pass
 
-app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
+app = Flask(_name_, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Configuration - Supabase REST API (HTTP-based, works on any network)
 # Hardcoded defaults (will be overridden by environment variables if set)
@@ -582,8 +583,8 @@ def get_slots():
                         # Try ISO format first (2026-05-04T18:13:31)
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '').replace('+00:00', '')
-                            check_in = datetime.fromisoformat(check_in_clean)
+                            check_in = datetime.fromisoformat(check_in_str.replace('Z', '+00:00'))
+                            current_duration = (datetime.now(timezone.utc) - check_in).total_seconds() 
                         except Exception as iso_err:
                             # Fall back to space format (2026-05-04 18:13:31)
                             print(f"ISO parse failed: {iso_err}, trying space format")
@@ -627,9 +628,9 @@ def toggle_slot():
         # Parse timestamp
         try:
             client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
-            now = client_dt.strftime('%Y-%m-%d %H:%M:%S')
+            now = client_dt.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         except:
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         if current_status == 'Available':
             new_status = 'Occupied'
@@ -884,7 +885,7 @@ def update_slot_from_hardware():
             return jsonify({'success': False, 'error': 'Missing slot_id or status'}), 400
 
         new_status = 'Occupied' if int(status) == 1 else 'Available'
-        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         # 1. Get current slot status directly from Supabase
         get_resp = requests.get(
@@ -986,10 +987,8 @@ def get_history():
                         # Try ISO format first (2026-05-04T18:13:31)
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '').replace('+00:00', '')
-                            check_out_clean = check_out_str.replace('Z', '').replace('+00:00', '')
-                            check_in = datetime.fromisoformat(check_in_clean)
-                            check_out = datetime.fromisoformat(check_out_clean)
+                            check_in = datetime.fromisoformat(check_in_str.replace('Z', '+00:00'))
+                            check_out = datetime.fromisoformat(check_out_str.replace('Z', '+00:00'))
                         except Exception as iso_err:
                             # Fall back to space format (2026-05-04 18:13:31)
                             print(f"ISO parse failed: {iso_err}, trying space format")
@@ -1011,14 +1010,14 @@ def get_history():
                         # Try ISO format first
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '').replace('+00:00', '')
+                            check_in_clean = check_in_str.replace('Z', '+00:00')
                             check_in = datetime.fromisoformat(check_in_clean)
                         except Exception as iso_err:
                             # Fall back to space format
                             print(f"ISO parse failed: {iso_err}, trying space format")
                             check_in = datetime.strptime(check_in_str, '%Y-%m-%d %H:%M:%S')
                         
-                        current_duration = (datetime.now() - check_in).total_seconds() / 3600
+                        current_duration = (datetime.now(timezone.utc) - check_in).total_seconds() / 3600
                         record['duration_hours'] = round(current_duration, 2)
                         record['parking_fee'] = round(current_duration * 5, 2)
                     except Exception as e:
@@ -1038,7 +1037,7 @@ def get_history_filtered():
     import os
     
     # Create a test file to confirm this code is running
-    test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'endpoint_called.txt')
+    test_file = os.path.join(os.path.dirname(os.path.abspath(_file_)), 'endpoint_called.txt')
     try:
         with open(test_file, 'a') as f:
             f.write("Endpoint called\n")
@@ -1049,7 +1048,7 @@ def get_history_filtered():
         filter_type = request.args.get('filter', 'today').lower()
         
         # Calculate date filters for Supabase
-        today = datetime.now().date()
+        today = datetime.now(timezone.utc).date()
         if filter_type == 'today':
             start_date = today
             end_date = today + timedelta(days=1)
@@ -1098,8 +1097,8 @@ def get_history_filtered():
                         # Try ISO format first (2026-05-04T18:13:31)
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '').replace('+00:00', '')
-                            check_out_clean = check_out_str.replace('Z', '').replace('+00:00', '')
+                            check_in_clean = check_in_str.replace('Z', '+00:00')
+                            check_out_clean = check_out_str.replace('Z', '+00:00')
                             check_in = datetime.fromisoformat(check_in_clean)
                             check_out = datetime.fromisoformat(check_out_clean)
                         except Exception as iso_err:
@@ -1123,13 +1122,13 @@ def get_history_filtered():
                         # Try ISO format first
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '').replace('+00:00', '')
+                            check_in_clean = check_in_str.replace('Z', '+00:00')
                             check_in = datetime.fromisoformat(check_in_clean)
                         except Exception as iso_err:
                             # Fall back to space format
                             check_in = datetime.strptime(check_in_str, '%Y-%m-%d %H:%M:%S')
                         
-                        current_duration = (datetime.now() - check_in).total_seconds() / 3600
+                        current_duration = (datetime.now(timezone.utc) - check_in).total_seconds() / 3600
                         record['duration_hours'] = round(current_duration, 2)
                         record['parking_fee'] = round(current_duration * 5, 2)
                     except Exception as e:
@@ -1892,7 +1891,7 @@ def create_password_reset_table():
     """Skip startup verification to avoid blocking app launch on network issues."""
     print("Password reset table check skipped at startup")
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     # Load environment variables
     load_dotenv(override=True)
     
