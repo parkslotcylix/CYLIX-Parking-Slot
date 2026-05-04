@@ -10,7 +10,7 @@ CAM_URL = "http://192.168.68.146:81/stream"
 CAM_IP = "192.168.68.146"
 COM_PORT = 'COM7' #Julie palitan mo to depende sa port nung LOLin mo or ung esp8266 mow check mo sa ide
 SENSITIVITY = 3500  # Total pixel change required to trigger "Full": adjust low (0 - 5000) means more sensitive, high (5000 and beyond ewan HDSAHDAH) means less sensitive 
-FLASK_API = "http://localhost:5000/api/update_slot_from_hardware"  # Backend API endpoint
+FLASK_API = "https://cylix-parking-slot.onrender.com/api/update_slot_from_hardware"  # Backend API endpoint
 
 # Track previous slot states to detect changes
 previous_results = [None, None, None]
