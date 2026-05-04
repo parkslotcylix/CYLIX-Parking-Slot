@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Parking Slot - Redirecting...</title>
+  <script>
+    // Redirect to login or home based on session
+    window.addEventListener('load', () => {
+      if (sessionStorage.getItem('user_email')) {
+        window.location.href = 'templates/home.html';
+      } else {
+        window.location.href = 'templates/login.html';
+      }
+    });
+  </script>
+</head>
+<body>
+  <p>Redirecting to Smart Parking Slot...</p>
+</body>
+</html>

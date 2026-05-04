@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Parking Slot - Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --green-dark: #1a4731;
+      --green-mid: #2d6a4f;
+      --green-light: #e8f5e9;
+      --green-soft: #d4edda;
+      --gold: #e8a020;
+      --gold-light: #f5c842;
+      --red: #e05252;
+      --white: #ffffff;
+      --text-dark: #1a3a2a;
+      --text-muted: #5a7a6a;
+      --card-border: #c8e6c9;
+      --available: #4caf50;
+      --occupied: #e05252;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--green-light);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: #1F2B26;
+      padding: 0 48px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .nav-logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #F7C85C;
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--white);
+    }
+
+    /* HOME PAGE */
+    #page-home {
+      display: flex;
+      padding: 40px 80px;
+      min-height: calc(100vh - 68px);
+      align-items: center;
+      gap: 80px;
+    }
+
+    .home-left { flex: 1; }
+
+    .home-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--green-dark);
+      margin-bottom: 8px;
+    }
+
+    .home-title span {
+      color: var(--gold);
+      display: block;
+    }
+
+    .home-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.8;
+      margin: 24px 0 44px;
+      max-width: 520px;
+    }
+
+    .home-stats {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 44px;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--white);
+      border: 2px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card .stat-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--gold);
+      margin: 6px 0;
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+
+    .stat-card .stat-icon {
+      font-size: 1.2rem;
+      margin-bottom: 2px;
+    }
+
+    .home-btns {
+      display: flex;
+      gap: 18px;
+    }
+
+    .btn-primary {
+      background: var(--green-dark);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 4px 12px rgba(26, 71, 49, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: var(--green-mid);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(26, 71, 49, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--green-dark);
+      border: 2.5px solid var(--green-dark);
+      border-radius: 12px;
+      padding: 14px 30px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.98rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-outline:hover {
+      background: var(--green-dark);
+      color: var(--white);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 71, 49, 0.2);
+    }
+
+    /* Dashboard Widget */
+    .home-right { flex: 0 0 560px; }
+
+    .dashboard-widget {
+      background: var(--green-dark);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    .dashboard-header {
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .dash-dots { display: flex; gap: 10px; }
+    .dash-dot { width: 16px; height: 16px; border-radius: 50%; }
+    .dash-dot.red { background: #ff5f57; }
+    .dash-dot.yellow { background: #ffbd2e; }
+    .dash-dot.green { background: #28ca41; }
+
+    .dashboard-header span {
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--green-dark);
+    }
+
+    .dashboard-body { padding: 28px; }
+
+    .dash-stats { display: flex; gap: 16px; margin-bottom: 24px; }
+
+    .dash-stat {
+      flex: 1;
+      background: rgba(255,255,255,0.14);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      color: var(--white);
+      transition: all 0.2s;
+    }
+
+    .dash-stat:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .dash-stat .ds-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--gold-light);
+      margin: 8px 0;
+    }
+
+    .dash-stat .ds-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 6px;
+    }
+
+    .dash-slots { display: flex; flex-direction: column; gap: 12px; }
+
+    .dash-slot {
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.2s;
+    }
+
+    .dash-slot:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .dash-slot .slot-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .slot-dot {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+    }
+
+    .slot-dot.available { background: var(--available); }
+    .slot-dot.occupied { background: var(--occupied); }
+
+    .slot-name {
+      color: var(--white);
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .slot-status {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 2px;
+    }
+
+    .slot-right-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+    }
+    .slot-right-dot.available { background: var(--available); }
+    .slot-right-dot.occupied { background: var(--occupied); }
+
+    .dash-footer {
+      padding: 16px 28px;
+      border-top: 1px solid rgba(255,255,255,0.14);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(76, 175, 80, 0.22);
+      border: 1.5px solid rgba(76, 175, 80, 0.45);
+      border-radius: 24px;
+      padding: 10px 18px;
+      color: #81c784;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .live-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--available);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .dash-footer-free {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.88rem;
+    }
+
+    /* ========== RESPONSIVE DESIGN ========== */
+    @media (max-width: 1024px) {
+      nav { padding: 0 32px; }
+      #page-home { padding: 40px 32px; gap: 40px; }
+      .home-title { font-size: 2.6rem; }
+      .home-right { flex: 0 0 450px; }
+    }
+
+    @media (max-width: 768px) {
+      nav { 
+        padding: 0 20px; 
+        height: 60px;
+      }
+      .nav-logo { font-size: 1rem; }
+      .nav-links { gap: 20px; font-size: 0.75rem; }
+      
+      #page-home {
+        flex-direction: column;
+        padding: 30px 20px;
+        gap: 30px;
+        min-height: auto;
+      }
+      
+      .home-title { font-size: 2rem; }
+      .home-desc { font-size: 0.9rem; max-width: 100%; }
+      
+      .home-stats {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .stat-card {
+        padding: 10px 8px;
+      }
+      
+      .stat-card .stat-num { font-size: 1.4rem; }
+      
+      .home-btns {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .btn-primary, .btn-outline {
+        width: 100%;
+        text-align: center;
+        padding: 14px 24px;
+        font-size: 0.9rem;
+      }
+      
+      .home-right {
+        flex: 1;
+        width: 100%;
+      }
+      
+      .dashboard-widget { box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2); }
+      .dashboard-header { padding: 14px 20px; }
+      .dashboard-body { padding: 20px; }
+      .dash-stats { gap: 12px; }
+      .dash-stat { padding: 14px; }
+      .dash-stat .ds-num { font-size: 1.6rem; }
+      .dash-slot { padding: 12px 14px; }
+    }
+
+    @media (max-width: 480px) {
+      nav { 
+        padding: 0 12px;
+        height: 56px;
+      }
+      
+      .nav-logo { gap: 6px; font-size: 0.9rem; }
+      .nav-logo-icon { width: 32px; height: 32px; }
+      
+      .nav-links { 
+        gap: 12px;
+        font-size: 0.7rem;
+        position: absolute;
+        left: 0;
+        top: 56px;
+        flex-direction: column;
+        background: #1F2B26;
+        width: 100%;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        display: none;
+      }
+      
+      .nav-links.active { display: flex; }
+      
+      #page-home { padding: 20px 12px; gap: 20px; }
+      
+      .home-title { font-size: 1.5rem; line-height: 1.3; }
+      .home-desc { font-size: 0.85rem; line-height: 1.6; margin: 16px 0 28px; }
+      
+      .home-stats { flex-direction: column; gap: 10px; margin-bottom: 28px; }
+      .stat-card { padding: 8px 6px; }
+      .stat-card .stat-num { font-size: 1.2rem; }
+      .stat-card .stat-label { font-size: 0.65rem; }
+      
+      .home-btns { flex-direction: column; gap: 10px; }
+      .btn-primary, .btn-outline { 
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 0.85rem;
+      }
+      
+      .home-right { width: 100%; }
+      .dashboard-header { padding: 12px 16px; }
+      .dashboard-body { padding: 16px; }
+      .dash-stats { gap: 10px; margin-bottom: 16px; }
+      .dash-stat { padding: 12px; border-radius: 12px; }
+      .dash-stat .ds-num { font-size: 1.4rem; }
+      .dash-stat .ds-label { font-size: 0.7rem; }
+      .dash-slots { gap: 10px; }
+      .dash-slot { padding: 10px 12px; border-radius: 10px; }
+      .slot-name { font-size: 0.85rem; }
+      .slot-status { font-size: 0.65rem; }
+      .dash-footer { padding: 12px 16px; flex-direction: column; gap: 10px; }
+      .live-badge { font-size: 0.75rem; padding: 8px 12px; }
+      .dash-footer-free { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a class="nav-logo" href="/home" style="cursor:pointer; text-decoration:none;">
+    <div class="nav-logo-icon"><img src="/static/images/logo.png" alt="ParkSlot Logo"/></div>
+    ParkSlot
+  </a>
+  <ul class="nav-links">
+    <li><a href="/home" class="active">Home</a></li>
+    <li><a href="/analytics">Report</a></li>
+    <li><a href="/parking">Parking</a></li>
+    <li><a href="/account">Account</a></li>
+    <li style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px;"><a href="#" onclick="handleLogout(event)" style="color: #ff9999;">🔒 Logout</a></li>
+  </ul>
+</nav>
+
+<!-- ========== HOME ========== -->
+<section id="page-home">
+  <div class="home-left">
+    <h1 class="home-title">
+      Smart Parking<span>Made Simple</span>
+    </h1>
+    <p class="home-desc">
+      Real-time parking slot detection powered by IoT sensors. Find available spots instantly, monitor your lot remotely, and streamline urban parking in Makati City.
+    </p>
+
+    <div class="home-stats">
+      <div class="stat-card">
+        <div class="stat-icon">🅿</div>
+        <div class="stat-num">3</div>
+        <div class="stat-label">Total Slots</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">∞</div>
+        <div class="stat-num">∞</div>
+        <div class="stat-label">Real-Time<br>Sensor Updates</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🕐</div>
+        <div class="stat-num">24/7</div>
+        <div class="stat-label">Monitoring</div>
+      </div>
+    </div>
+
+    <div class="home-btns">
+      <a class="btn-primary" href="/parking">View Parking Slots →</a>
+      <a class="btn-outline" href="/analytics">📊 View Analytics</a>
+    </div>
+  </div>
+
+  <div class="home-right">
+    <div class="dashboard-widget">
+      <div class="dashboard-header">
+        <div class="dash-dots">
+          <div class="dash-dot red"></div>
+          <div class="dash-dot yellow"></div>
+          <div class="dash-dot green"></div>
+        </div>
+        <span>Parking Dashboard</span>
+      </div>
+      <div class="dashboard-body">
+        <div class="dash-stats">
+          <div class="dash-stat">
+            <div class="ds-num" id="dash-available">1</div>
+            <div class="ds-label">Available</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-num" id="dash-occupied">2</div>
+            <div class="ds-label">Occupied</div>
+          </div>
+          <div class="dash-stat">
+            <div class="ds-num" id="dash-pct">67%</div>
+            <div class="ds-label">Occupancy</div>
+          </div>
+        </div>
+        <div class="dash-slots">
+          <div class="dash-slot" id="dash-s1">
+            <div class="slot-left">
+              <div class="slot-dot available" id="ds1-dot"></div>
+              <div>
+                <div class="slot-name">Slot 1</div>
+                <div class="slot-status" id="ds1-status">AVAILABLE</div>
+              </div>
+            </div>
+            <div class="slot-right-dot available" id="ds1-rdot"></div>
+          </div>
+          <div class="dash-slot" id="dash-s2">
+            <div class="slot-left">
+              <div class="slot-dot occupied" id="ds2-dot"></div>
+              <div>
+                <div class="slot-name">Slot 2</div>
+                <div class="slot-status" id="ds2-status">OCCUPIED</div>
+              </div>
+            </div>
+            <div class="slot-right-dot occupied" id="ds2-rdot"></div>
+          </div>
+          <div class="dash-slot" id="dash-s3">
+            <div class="slot-left">
+              <div class="slot-dot occupied" id="ds3-dot"></div>
+              <div>
+                <div class="slot-name">Slot 3</div>
+                <div class="slot-status" id="ds3-status">OCCUPIED</div>
+              </div>
+            </div>
+            <div class="slot-right-dot occupied" id="ds3-rdot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-footer">
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          Live Monitoring Active
+        </div>
+        <span class="dash-footer-free" id="dash-free-text">1 Spot Free!</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const API_BASE = '/api';
+
+  function updateDashboard() {
+    fetch(`${API_BASE}/get_slots`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.slots) {
+          let available = 0, occupied = 0;
+          
+          data.slots.forEach((slot, index) => {
+            const slotNum = index + 1;
+            const isOccupied = slot.slot_status === 'Occupied';
+            
+            if (isOccupied) occupied++;
+            else available++;
+
+            const dotEl = document.getElementById('ds' + slotNum + '-dot');
+            const rdotEl = document.getElementById('ds' + slotNum + '-rdot');
+            const statusEl = document.getElementById('ds' + slotNum + '-status');
+
+            if (dotEl) dotEl.className = 'slot-dot ' + (isOccupied ? 'occupied' : 'available');
+            if (rdotEl) rdotEl.className = 'slot-right-dot ' + (isOccupied ? 'occupied' : 'available');
+            if (statusEl) statusEl.textContent = isOccupied ? 'OCCUPIED' : 'AVAILABLE';
+          });
+
+          const pct = data.slots.length > 0 ? Math.round((occupied / data.slots.length) * 100) : 0;
+
+          document.getElementById('dash-available').textContent = available;
+          document.getElementById('dash-occupied').textContent = occupied;
+          document.getElementById('dash-pct').textContent = pct + '%';
+          document.getElementById('dash-free-text').textContent = available + (available === 1 ? ' Spot Free!' : ' Spots Free!');
+        }
+      })
+      .catch(error => console.error('Error fetching dashboard:', error));
+  }
+
+  // Load dashboard on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    // Check authentication
+    checkAuthentication();
+    updateDashboard();
+  });
+  
+  // Refresh every 5 seconds
+  setInterval(updateDashboard, 5000);
+
+  // Authentication check
+  function checkAuthentication() {
+    const userEmail = sessionStorage.getItem('user_email');
+    if (!userEmail) {
+      // Not logged in, redirect to login
+      window.location.href = '/';
+    }
+  }
+
+  // Handle logout
+  function handleLogout(event) {
+    event.preventDefault();
+    if (confirm('Are you sure you want to logout?')) {
+      // Clear session
+      sessionStorage.removeItem('user_email');
+      sessionStorage.removeItem('user_id');
+      sessionStorage.removeItem('access_level');
+      
+      // Redirect to login
+      window.location.href = '/';
+    }
+  }
+
+</script>
+</body>
+</html>

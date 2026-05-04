@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Parking Slot - Parking</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --green-dark: #1a4731;
+      --green-mid: #2d6a4f;
+      --green-light: #e8f5e9;
+      --green-soft: #d4edda;
+      --gold: #e8a020;
+      --gold-light: #f5c842;
+      --red: #e05252;
+      --white: #ffffff;
+      --text-dark: #1a3a2a;
+      --text-muted: #5a7a6a;
+      --card-border: #c8e6c9;
+      --available: #4caf50;
+      --occupied: #e05252;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--green-light);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: #1F2B26;
+      padding: 0 48px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--white);
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .nav-logo-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #F7C85C;
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      width: 100%;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--white);
+    }
+
+    /* ========== PARKING PAGE ========== */
+    #page-parking {
+      display: flex;
+      flex-direction: column;
+      padding: 24px 60px;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .parking-right {
+      flex: 1;
+      width: 100%;
+    }
+
+    .parking-right .pr-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      justify-content: space-between;
+    }
+
+    .parking-right .pr-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .pr-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .slot-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .slot-card {
+      border-radius: 16px;
+      padding: 28px 20px;
+      min-height: 420px;
+      text-align: center;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slot-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .slot-card.available-card {
+      background: #f1faf2;
+      border-color: #c8e6c9;
+    }
+
+    .slot-card.occupied-card {
+      background: #fff0f0;
+      border-color: #ffcdd2;
+    }
+
+    .slot-card h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--green-dark);
+      margin-bottom: 12px;
+    }
+
+    .slot-card .car-icon {
+      width: 130px;
+      height: 130px;
+      margin: 12px auto 16px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+    }
+
+    .slot-card .slot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 20px;
+      padding: 10px 18px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+
+    .badge-available {
+      background: var(--available);
+      color: white;
+    }
+
+    .badge-occupied {
+      background: var(--occupied);
+      color: white;
+    }
+
+    .slot-card .tap-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .slot-card .tap-hint::before {
+      content: '⚙ ';
+    }
+
+    .slot-timestamp {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      width: 100%;
+    }
+
+    .timestamp-label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(0, 0, 0, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+
+    .timestamp-value {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .parking-footer {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 0;
+    }
+
+    .pf-stat {
+      background: var(--white);
+      border: 2px solid var(--card-border);
+      border-radius: 20px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+      gap: 16px;
+    }
+
+    .pf-stat strong {
+      font-size: 2rem;
+      color: var(--green-dark);
+      font-weight: 900;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .pf-stat-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      flex: 1;
+    }
+
+    .pf-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    /* Slot state: occupied shows car */
+    .slot-card .car-visible {
+      display: block;
+    }
+
+    .slot-card .car-hidden {
+      display: none;
+    }
+
+    /* ========== RESPONSIVE DESIGN ========== */
+    @media (max-width: 1024px) {
+      nav { padding: 0 32px; }
+      #page-parking { padding: 20px 32px; gap: 20px; }
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; height: 60px; }
+      .nav-logo { font-size: 1rem; }
+      .nav-links { gap: 20px; font-size: 0.75rem; }
+      #page-parking { padding: 16px 20px; gap: 16px; }
+      .parking-right .pr-header h2 { font-size: 1.2rem; }
+      .pr-sub { font-size: 0.75rem; margin-bottom: 16px; }
+      .slot-cards { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+      .slot-card { padding: 20px 16px; min-height: 360px; gap: 8px; }
+      .slot-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+      .slot-card .car-icon { width: 100px; height: 100px; margin: 8px auto 12px; }
+      .slot-card .slot-badge { font-size: 0.85rem; padding: 6px 12px; }
+      .slot-card .tap-hint { font-size: 0.75rem; }
+      .slot-timestamp { font-size: 0.8rem; }
+      .timestamp-label { font-size: 0.7rem; }
+      .timestamp-value { font-size: 0.85rem; }
+      .parking-footer { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+      .pf-stat { padding: 12px 14px; border-radius: 14px; }
+      .pf-stat strong { font-size: 1.4rem; }
+      .pf-stat-label { font-size: 0.75rem; }
+    }
+
+    @media (max-width: 480px) {
+      nav { padding: 0 12px; height: 56px; }
+      .nav-logo { gap: 6px; font-size: 0.9rem; }
+      .nav-logo-icon { width: 32px; height: 32px; }
+      .nav-links {
+        gap: 12px;
+        font-size: 0.7rem;
+        position: absolute;
+        left: 0;
+        top: 56px;
+        flex-direction: column;
+        background: #1F2B26;
+        width: 100%;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: none;
+      }
+      .nav-links.active { display: flex; }
+      #page-parking { padding: 12px 12px; gap: 12px; }
+      .parking-right .pr-header { flex-direction: column; gap: 6px; margin-bottom: 12px; }
+      .parking-right .pr-header h2 { font-size: 1rem; }
+      .pr-sub { font-size: 0.7rem; margin-bottom: 12px; }
+      .slot-cards { grid-template-columns: 1fr; gap: 12px; }
+      .slot-card { padding: 16px 12px; min-height: 320px; gap: 6px; }
+      .slot-card h3 { font-size: 1rem; margin-bottom: 6px; }
+      .slot-card .car-icon { width: 80px; height: 80px; margin: 6px auto 8px; }
+      .slot-card .slot-badge { font-size: 0.8rem; padding: 5px 10px; margin-bottom: 8px; }
+      .slot-card .tap-hint { font-size: 0.7rem; }
+      .slot-timestamp { font-size: 0.75rem; margin-top: 6px; padding-top: 6px; }
+      .timestamp-label { font-size: 0.65rem; margin-bottom: 2px; }
+      .timestamp-value { font-size: 0.8rem; }
+      .parking-footer { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+      .pf-stat { padding: 10px 12px; border-radius: 12px; flex-direction: row; }
+      .pf-stat strong { font-size: 1.2rem; }
+      .pf-stat-label { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <a class="nav-logo" href="/home" style="cursor:pointer; text-decoration:none;">
+      <div class="nav-logo-icon"><img src="/static/images/logo.png" alt="ParkSlot Logo" /></div>
+      ParkSlot
+    </a>
+    <ul class="nav-links">
+      <li><a href="/home">Home</a></li>
+      <li><a href="/analytics">Report</a></li>
+      <li><a href="/parking" class="active">Parking</a></li>
+      <li><a href="/account">Account</a></li>
+      <li style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px;">
+        <a href="#" onclick="handleLogout(event)" style="color: #ff9999;">🔒 Logout</a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- ========== PARKING ========== -->
+  <section id="page-parking">
+    <div class="parking-right">
+      <div class="pr-header">
+        <h2>Parking Slots</h2>
+        <div id="current-time"
+          style="margin-left: auto; font-family: 'Poppins', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-dark); text-align: right;">
+          --:-- --
+        </div>
+        <div id="hardware-status"
+          style="margin-left: 20px; padding: 6px 12px; border-radius: 8px; background: #4caf50; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+          🟢 Hardware Connected
+        </div>
+      </div>
+      <p class="pr-sub">Click any slot to toggle status · Available / Occupied</p>
+
+      <div class="slot-cards">
+        <div class="slot-card available-card" id="scard1" onclick="toggleSlot(1)">
+          <h3 id="slabel1">SLOT 1</h3>
+          <img class="car-icon car-hidden" id="scar1" src="" alt="Slot 1 Car" />
+          <div class="slot-badge badge-available" id="sbadge1">
+            <span>●</span> AVAILABLE
+          </div>
+          <div class="slot-timestamp" id="stime1" style="display:none;">
+            <span class="timestamp-label">Occupied Since</span>
+            <span class="timestamp-value" id="stime1-value">--:-- --</span>
+          </div>
+          <div class="tap-hint">TAP TO CHANGE</div>
+        </div>
+
+        <div class="slot-card occupied-card" id="scard2" onclick="toggleSlot(2)">
+          <h3 id="slabel2">SLOT 2</h3>
+          <img class="car-icon car-visible" id="scar2" src="" alt="Slot 2 Car" />
+          <div class="slot-badge badge-occupied" id="sbadge2">
+            <span>●</span> OCCUPIED
+          </div>
+          <div class="slot-timestamp" id="stime2" style="display:block;">
+            <span class="timestamp-label">Occupied Since</span>
+            <span class="timestamp-value" id="stime2-value">--:-- --</span>
+          </div>
+          <div class="tap-hint">TAP TO CHANGE</div>
+        </div>
+
+        <div class="slot-card available-card" id="scard3" onclick="toggleSlot(3)">
+          <h3 id="slabel3">SLOT 3</h3>
+          <img class="car-icon car-hidden" id="scar3" src="" alt="Slot 3 Car" />
+          <div class="slot-badge badge-available" id="sbadge3">
+            <span>●</span> AVAILABLE
+          </div>
+          <div class="slot-timestamp" id="stime3" style="display:none;">
+            <span class="timestamp-label">Occupied Since</span>
+            <span class="timestamp-value" id="stime3-value">--:-- --</span>
+          </div>
+          <div class="tap-hint">TAP TO CHANGE</div>
+        </div>
+      </div>
+
+      <div class="parking-footer">
+        <div class="pf-stat">
+          <span class="pf-stat-label">
+            <span class="pf-dot" style="background:#e88a20; display: inline-block; margin-right: 8px;"></span>
+            Total Slots
+          </span>
+          <strong id="pf-total">3</strong>
+        </div>
+        <div class="pf-stat">
+          <span class="pf-stat-label">
+            <span class="pf-dot" style="background:var(--available); display: inline-block; margin-right: 8px;"></span>
+            Available
+          </span>
+          <strong id="pf-avail">0</strong>
+        </div>
+        <div class="pf-stat">
+          <span class="pf-stat-label">
+            <span class="pf-dot" style="background:var(--occupied); display: inline-block; margin-right: 8px;"></span>
+            Occupied
+          </span>
+          <strong id="pf-occ">3</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const API_BASE = '/api';
+    const slotTimestamps = {};
+    const STORAGE_KEY = 'parkslot_timestamps';
+    let lastSlotStates = {};
+    let lastSuccessfulPoll = Date.now();
+    let hardwareConnected = true;
+    let isPolling = false;
+
+    // Map slot IDs to car images
+    const slotImageMap = {
+      1: 'green.png',
+      2: 'orange.png',
+      3: 'red.png'
+    };
+
+    // Load timestamps from localStorage on page load
+    function loadTimestampsFromStorage() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          for (let slotNum in parsed) {
+            slotTimestamps[slotNum] = new Date(parsed[slotNum]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading timestamps from storage:', error);
+      }
+    }
+
+    // Save timestamps to localStorage
+    function saveTimestampsToStorage() {
+      try {
+        const toStore = {};
+        for (let slotNum in slotTimestamps) {
+          toStore[slotNum] = slotTimestamps[slotNum].toISOString();
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+      } catch (error) {
+        console.error('Error saving timestamps to storage:', error);
+      }
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '--:-- --';
+      const date = new Date(dateStr);
+      let hours = date.getHours();
+      const mins = String(date.getMinutes()).padStart(2, '0');
+      const secs = String(date.getSeconds()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const hourStr = String(hours).padStart(2, '0');
+      return `${hourStr}:${mins}:${secs} ${ampm}`;
+    }
+
+    // Update hardware status indicator
+    function updateHardwareStatus() {
+      const statusEl = document.getElementById('hardware-status');
+      if (!statusEl) return;
+      const timeSinceLastPoll = Date.now() - lastSuccessfulPoll;
+      const isConnected = timeSinceLastPoll < 15000;
+      if (isConnected && hardwareConnected) {
+        statusEl.style.background = '#4caf50';
+        statusEl.textContent = '🟢 Hardware Connected';
+      } else {
+        statusEl.style.background = '#ff9800';
+        statusEl.textContent = '🟡 Syncing...';
+      }
+    }
+
+    // Safe polling — no overlapping requests
+    function loadParkingSlots() {
+      if (isPolling) return Promise.resolve();
+      isPolling = true;
+
+      return fetch(`${API_BASE}/get_slots`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.slots) {
+            lastSuccessfulPoll = Date.now();
+            hardwareConnected = true;
+            updateHardwareStatus();
+            updateUIFromSlots(data.slots);
+          }
+        })
+        .catch(error => {
+          console.error('Poll error:', error);
+          hardwareConnected = false;
+          updateHardwareStatus();
+        })
+        .finally(() => {
+          isPolling = false;
+        });
+    }
+
+    // Chained timeout prevents overlapping polls
+    function schedulePoll() {
+      setTimeout(() => {
+        loadParkingSlots().finally(schedulePoll);
+      }, 2000);
+    }
+
+    function updateUIFromSlots(slots) {
+      let available = 0, occupied = 0;
+
+      slots.forEach(slot => {
+        const slotNum = slot.slot_id;
+        const isOccupied = slot.slot_status === 'Occupied';
+        const previousState = lastSlotStates[slotNum];
+
+        // Debug log — shows in browser console every 2 seconds
+        console.log(`Slot ${slotNum}: status="${slot.slot_status}", check_in="${slot.check_in_time}"`);
+
+        // Detect state change from Arduino
+        const stateChanged = previousState !== undefined && previousState !== isOccupied;
+        if (stateChanged) {
+          console.log(`Slot ${slotNum} changed: ${previousState ? 'Occupied' : 'Available'} → ${isOccupied ? 'Occupied' : 'Available'}`);
+        }
+
+        lastSlotStates[slotNum] = isOccupied;
+
+        if (isOccupied) occupied++;
+        else available++;
+
+        const card = document.getElementById('scard' + slotNum);
+        const label = document.getElementById('slabel' + slotNum);
+        const badge = document.getElementById('sbadge' + slotNum);
+        const car = document.getElementById('scar' + slotNum);
+        const timeEl = document.getElementById('stime' + slotNum);
+        const timeValEl = document.getElementById('stime' + slotNum + '-value');
+
+        // Update slot label from database
+        if (label) {
+          label.textContent = slot.slot_label || 'SLOT ' + slotNum;
+        }
+
+        // Set car image src
+        if (car) {
+          const imagePath = '/static/images/' + slotImageMap[slotNum];
+          car.src = imagePath;
+          car.alt = 'Slot ' + slotNum + ' Car';
+          car.onerror = function () {
+            console.warn(`Failed to load car image for Slot ${slotNum}: ${imagePath}`);
+          };
+          car.onload = function () {
+            console.log(`Car image loaded for Slot ${slotNum}`);
+          };
+        }
+
+        // Update card background color
+        if (card) {
+          card.className = 'slot-card ' + (isOccupied ? 'occupied-card' : 'available-card');
+        }
+
+        // Update badge
+        if (badge) {
+          badge.className = 'slot-badge ' + (isOccupied ? 'badge-occupied' : 'badge-available');
+          badge.innerHTML = '<span>●</span> ' + (isOccupied ? 'OCCUPIED' : 'AVAILABLE');
+        }
+
+        // Show/hide car image
+        if (car) {
+          car.className = 'car-icon ' + (isOccupied ? 'car-visible' : 'car-hidden');
+          console.log(`Slot ${slotNum}: car class="${car.className}", occupied=${isOccupied}`);
+        }
+
+        // Handle timestamps
+        if (timeEl && timeValEl) {
+          if (isOccupied) {
+            timeEl.style.display = 'block';
+            if (slotTimestamps[slotNum]) {
+              // Use client-side timestamp if already captured
+              timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
+            } else if (slot.check_in_time) {
+              // Fall back to DB timestamp
+              slotTimestamps[slotNum] = new Date(slot.check_in_time);
+              timeValEl.textContent = formatDateTime(slot.check_in_time);
+              saveTimestampsToStorage();
+            }
+          } else {
+            // Slot is available — clear everything
+            timeEl.style.display = 'none';
+            if (slotTimestamps[slotNum]) {
+              console.log(`Clearing timestamp for Slot ${slotNum}`);
+              delete slotTimestamps[slotNum];
+              saveTimestampsToStorage();
+            }
+          }
+        }
+      });
+
+      document.getElementById('pf-total').textContent = slots.length;
+      document.getElementById('pf-avail').textContent = available;
+      document.getElementById('pf-occ').textContent = occupied;
+    }
+
+    function toggleSlot(n) {
+      const now = new Date();
+      const clientTimestamp = now.toISOString();
+
+      fetch(`${API_BASE}/toggle_slot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slot_id: n,
+          client_timestamp: clientTimestamp
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log(`Manual toggle: Slot ${n} → ${data.new_status}`);
+            const timeValEl = document.getElementById('stime' + n + '-value');
+            const timeEl = document.getElementById('stime' + n);
+
+            if (data.new_status === 'Occupied') {
+              slotTimestamps[n] = now;
+              if (timeValEl) timeValEl.textContent = formatDateTime(now);
+              if (timeEl) timeEl.style.display = 'block';
+              saveTimestampsToStorage();
+            } else {
+              delete slotTimestamps[n];
+              if (timeEl) timeEl.style.display = 'none';
+              saveTimestampsToStorage();
+            }
+
+            loadParkingSlots();
+          } else {
+            console.error('Error toggling slot:', data.error);
+          }
+        })
+        .catch(error => console.error('Toggle error:', error));
+    }
+
+    function resetSlots() {
+      if (confirm('Are you sure you want to reset all slots to available?')) {
+        fetch(`${API_BASE}/reset_slots`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              for (let slotNum in slotTimestamps) {
+                delete slotTimestamps[slotNum];
+              }
+              saveTimestampsToStorage();
+              loadParkingSlots();
+            } else {
+              console.error('Error resetting slots:', data.error);
+            }
+          })
+          .catch(error => console.error('Reset error:', error));
+      }
+    }
+
+    // Update clock display every second
+    function updateCurrentTime() {
+      const now = new Date();
+      let clockHours = now.getHours();
+      const clockMins = String(now.getMinutes()).padStart(2, '0');
+      const clockSecs = String(now.getSeconds()).padStart(2, '0');
+      const clockAmpm = clockHours >= 12 ? 'PM' : 'AM';
+      clockHours = clockHours % 12 || 12;
+      const clockHourStr = String(clockHours).padStart(2, '0');
+      const timeDisplay = `${clockHourStr}:${clockMins}:${clockSecs} ${clockAmpm}`;
+
+      const currentTimeEl = document.getElementById('current-time');
+      if (currentTimeEl) currentTimeEl.textContent = timeDisplay;
+
+      // Keep occupied-since timestamps refreshed
+      for (let slotNum in slotTimestamps) {
+        const timeValEl = document.getElementById('stime' + slotNum + '-value');
+        if (timeValEl) {
+          timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
+        }
+      }
+    }
+
+    // Authentication check
+    function checkAuthentication() {
+      const userEmail = sessionStorage.getItem('user_email');
+      if (!userEmail) {
+        window.location.href = '/';
+      }
+    }
+
+    // Handle logout
+    function handleLogout(event) {
+      event.preventDefault();
+      if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.removeItem('user_email');
+        sessionStorage.removeItem('user_id');
+        sessionStorage.removeItem('access_level');
+        window.location.href = '/';
+      }
+    }
+
+    // ── Boot ──
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuthentication();
+      loadTimestampsFromStorage();
+      loadParkingSlots();   // immediate first load
+      schedulePoll();       // start safe polling loop
+      updateCurrentTime();
+      updateHardwareStatus();
+      console.log('Parking page loaded — monitoring slots in real-time');
+    });
+
+    // Hardware status check every 3 seconds
+    setInterval(updateHardwareStatus, 3000);
+
+    // Clock tick every second
+    setInterval(updateCurrentTime, 1000);
+  </script>
+</body>
+
+</html>
