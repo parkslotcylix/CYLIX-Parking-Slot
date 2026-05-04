@@ -504,31 +504,34 @@
     const completedSessions = filteredHistory.filter(record => (record.status || '').toLowerCase() === 'completed');
     const activeSessions = filteredHistory.filter(record => (record.status || '').toLowerCase() === 'active').length;
     
-    // Calculate maximum duration from completed sessions
+    // Calculate maximum duration from completed sessions ONLY
+    // ONLY use check_out_time - check_in_time, ignore duration_hours field
     let maxDuration = 0;
+    let validSessions = 0;
+    
     if (completedSessions.length > 0) {
       completedSessions.forEach(record => {
-        let duration = 0;
-        
-        // Try to get duration from duration_hours field first
-        if (record.duration_hours !== undefined && record.duration_hours !== null) {
-          duration = Number(record.duration_hours) || 0;
-        } 
-        // Fallback: calculate from check_in_time and check_out_time
-        else if (record.check_in_time && record.check_out_time) {
+        // ONLY calculate from check_in_time and check_out_time
+        if (record.check_in_time && record.check_out_time) {
           const checkIn = parseDateTime(record.check_in_time);
           const checkOut = parseDateTime(record.check_out_time);
-          if (checkIn && checkOut) {
-            duration = (checkOut - checkIn) / (1000 * 60 * 60); // Convert ms to hours
+          
+          if (checkIn && checkOut && checkOut >= checkIn) {
+            // Calculate duration in hours
+            const durationMs = checkOut - checkIn;
+            const durationHours = durationMs / (1000 * 60 * 60);
+            
+            console.log(`Slot ${record.slot_id}: ${checkIn.toISOString()} → ${checkOut.toISOString()} = ${durationHours.toFixed(2)}h`);
+            
+            // Update max if this duration is larger
+            if (durationHours > maxDuration) {
+              maxDuration = durationHours;
+            }
+            validSessions++;
           }
         }
-        
-        // Update max if this duration is larger
-        if (duration > maxDuration) {
-          maxDuration = duration;
-        }
       });
-      console.log(`Calculated max_duration: ${maxDuration.toFixed(2)}h from ${completedSessions.length} completed sessions`);
+      console.log(`Calculated max_duration: ${maxDuration.toFixed(2)}h from ${validSessions}/${completedSessions.length} valid completed sessions`);
     } else {
       console.log(`No completed sessions found for max duration calculation`);
     }
