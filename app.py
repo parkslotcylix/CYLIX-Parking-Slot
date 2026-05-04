@@ -25,14 +25,24 @@ except:
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Configuration - Supabase REST API (HTTP-based, works on any network)
-# Read from environment variables (Render sets these)
-SUPABASE_URL = os.getenv('SUPABASE_URL')
-if not SUPABASE_URL:
-    SUPABASE_URL = 'https://bhsofudngyukxkkialwi.supabase.co'
-    print(f"WARNING: SUPABASE_URL not set in environment, using default: {SUPABASE_URL}")
+# Hardcoded defaults (will be overridden by environment variables if set)
+SUPABASE_URL = 'https://bhsofudngyukxkkialwi.supabase.co'
+SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoc29mdWRuZ3l1a3hra2lhbHdpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzYxNDg4MywiZXhwIjoyMDkzMTkwODgzfQ.BcwHm7lt6fj0FD6Zd2LAzA9aGd3KLxW7mPfhhw94OGk'
+SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoc29mdWRuZ3l1a3hra2lhbHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2MTQ4ODMsImV4cCI6MjA5MzE5MDg4M30.sRrZ7PyEcJRmlxbLwZ0OfVzxKdJtcDvGmnH9EHFWjbU'
 
-SUPABASE_SERVICE_ROLE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '').strip()
-SUPABASE_ANON_KEY = os.getenv('SUPABASE_ANON_KEY', '').strip()
+# Override with environment variables if they exist
+env_url = os.getenv('SUPABASE_URL')
+if env_url:
+    SUPABASE_URL = env_url
+
+env_service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+if env_service_key:
+    SUPABASE_SERVICE_ROLE_KEY = env_service_key.strip()
+
+env_anon_key = os.getenv('SUPABASE_ANON_KEY')
+if env_anon_key:
+    SUPABASE_ANON_KEY = env_anon_key.strip()
+
 SUPABASE_API_KEY = SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY or 'invalid'
 
 print(f"DEBUG: SUPABASE_URL = {SUPABASE_URL}")
