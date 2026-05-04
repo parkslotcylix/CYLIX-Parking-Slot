@@ -583,7 +583,7 @@ def get_slots():
                         # Try ISO format first (2026-05-04T18:13:31)
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in = datetime.fromisoformat(check_in_str.replace('Z', '+00:00'))
+                            check_in = datetime.fromisoformat(check_in_str.replace('Z', '+08:00'))
                             current_duration = (datetime.now(timezone.utc) - check_in).total_seconds() 
                         except Exception as iso_err:
                             # Fall back to space format (2026-05-04 18:13:31)
@@ -625,16 +625,12 @@ def toggle_slot():
         slot = get_resp.json()[0]
         current_status = slot['slot_status']
 
-        # Parse timestamp - use client's local time as-is
+        # Parse timestamp
         try:
-            # Client sends ISO format with timezone info
-            client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
-            # Convert to naive datetime in client's timezone (remove timezone info)
-            # This preserves the local time the client sees
-            now = client_dt.replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
-        except Exception as e:
-            print(f"Timestamp parse error: {e}, using server time")
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+08:00'))
+            now = client_dt.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         if current_status == 'Available':
             new_status = 'Occupied'
@@ -725,7 +721,7 @@ def toggle_slot():
                 if client_timestamp:
                     try:
                         # Parse client timestamp (ISO format from JavaScript)
-                        client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
+                        client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+08:00'))
                         now = client_dt.strftime('%Y-%m-%d %H:%M:%S')
                     except:
                         # Fallback to server time if parsing fails
@@ -991,8 +987,8 @@ def get_history():
                         # Try ISO format first (2026-05-04T18:13:31)
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in = datetime.fromisoformat(check_in_str.replace('Z', '+00:00'))
-                            check_out = datetime.fromisoformat(check_out_str.replace('Z', '+00:00'))
+                            check_in = datetime.fromisoformat(check_in_str.replace('Z', '+08:00'))
+                            check_out = datetime.fromisoformat(check_out_str.replace('Z', '+08:00'))
                         except Exception as iso_err:
                             # Fall back to space format (2026-05-04 18:13:31)
                             print(f"ISO parse failed: {iso_err}, trying space format")
@@ -1014,7 +1010,7 @@ def get_history():
                         # Try ISO format first
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '+00:00')
+                            check_in_clean = check_in_str.replace('Z', '+08:00')
                             check_in = datetime.fromisoformat(check_in_clean)
                         except Exception as iso_err:
                             # Fall back to space format
@@ -1101,8 +1097,8 @@ def get_history_filtered():
                         # Try ISO format first (2026-05-04T18:13:31)
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '+00:00')
-                            check_out_clean = check_out_str.replace('Z', '+00:00')
+                            check_in_clean = check_in_str.replace('Z', '+08:00')
+                            check_out_clean = check_out_str.replace('Z', '+08:00')
                             check_in = datetime.fromisoformat(check_in_clean)
                             check_out = datetime.fromisoformat(check_out_clean)
                         except Exception as iso_err:
@@ -1126,7 +1122,7 @@ def get_history_filtered():
                         # Try ISO format first
                         try:
                             # Remove timezone info if present, keep naive datetime
-                            check_in_clean = check_in_str.replace('Z', '+00:00')
+                            check_in_clean = check_in_str.replace('Z', '+08:00')
                             check_in = datetime.fromisoformat(check_in_clean)
                         except Exception as iso_err:
                             # Fall back to space format
