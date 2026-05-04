@@ -4,6 +4,10 @@ import requests
 import serial
 import numpy as np
 import time
+import os
+
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --- CONFIG ---
 CAM_URL = "http://192.168.68.146:81/stream"
@@ -19,7 +23,10 @@ state_change_counts = [0, 0, 0]  # Count consecutive changes before confirming
 DEBOUNCE_FRAMES = 5  # Require 5 consecutive frames of same state before accepting change
 
 ser = serial.Serial(COM_PORT, 115200, timeout=0.1)
-with open("slot_coords.pkl", "rb") as f:
+
+# Load slot coordinates from the correct directory
+slot_coords_path = os.path.join(SCRIPT_DIR, "slot_coords.pkl")
+with open(slot_coords_path, "rb") as f:
     slot_positions = pickle.load(f)
 
 cap = cv2.VideoCapture(CAM_URL)
