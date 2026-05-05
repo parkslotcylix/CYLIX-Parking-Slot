@@ -875,7 +875,6 @@ def reset_slots():
 
 # Update slot status from hardware (camera/Arduino)
 @app.route('/api/update_slot_from_hardware', methods=['POST', 'OPTIONS'])
-@app.route('/api/update_slot_from_hardware', methods=['POST', 'OPTIONS'])
 def update_slot_from_hardware():
     try:
         data = request.get_json()
