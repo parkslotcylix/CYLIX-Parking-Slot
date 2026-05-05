@@ -543,10 +543,31 @@ def login():
         admin = fetch_admin_by_email(email)
 
         if admin and admin.get('admin_password') == password:
+            # Check admin status
+            status = admin.get('status', 'active')
+            
+            if status == 'inactive':
+                return jsonify({
+                    'success': False,
+                    'error': 'Account Inactive',
+                    'message': 'Your account has been deactivated. Please contact the administrator.',
+                    'status': 'inactive'
+                }), 403
+            
+            if status == 'suspended':
+                return jsonify({
+                    'success': False,
+                    'error': 'Account Suspended',
+                    'message': 'Your account has been suspended. Please contact the administrator.',
+                    'status': 'suspended'
+                }), 403
+            
+            # Store session data
             session['user_email'] = admin['admin_email']
             session['user_id'] = admin['admin_id']
             session['user_name'] = admin['admin_name']
             session['access_level'] = admin['access_level']
+            session['status'] = admin.get('status', 'active')
 
             return jsonify({
                 'success': True,
@@ -554,7 +575,8 @@ def login():
                 'admin_id': admin['admin_id'],
                 'admin_name': admin['admin_name'],
                 'admin_email': admin['admin_email'],
-                'access_level': admin['access_level']
+                'access_level': admin['access_level'],
+                'status': admin.get('status', 'active')
             })
 
         return jsonify({'success': False, 'error': 'Invalid email or password'}), 401
@@ -1706,6 +1728,29 @@ def get_admin():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# Check current session (for access control)
+@app.route('/api/check_session', methods=['GET'])
+def check_session():
+    try:
+        if 'user_id' not in session:
+            return jsonify({
+                'success': False,
+                'logged_in': False,
+                'message': 'Not logged in'
+            }), 401
+        
+        return jsonify({
+            'success': True,
+            'logged_in': True,
+            'user_id': session.get('user_id'),
+            'user_name': session.get('user_name'),
+            'user_email': session.get('user_email'),
+            'access_level': session.get('access_level'),
+            'status': session.get('status', 'active')
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Test Supabase Storage connection
 @app.route('/api/test_storage', methods=['GET'])
 def test_storage():
@@ -1822,9 +1867,21 @@ def analytics():
 def account():
     return render_template('account.html')
 
-# Admin Management Page
+# Admin Management Page (Super Admin Only)
 @app.route('/admin-management')
 def admin_management():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return render_template('error.html', message='Please login to access this page'), 401
+    
+    # Check if user is super admin
+    if session.get('access_level') != 'super_admin':
+        return render_template('error.html', message='Access Denied: Only Super Admins can access this page'), 403
+    
+    # Check if account is active
+    if session.get('status') != 'active':
+        return render_template('error.html', message='Your account is not active'), 403
+    
     return render_template('admin_management.html')
 
 # ============================================
@@ -1835,8 +1892,13 @@ def admin_management():
 @app.route('/api/get_all_admins', methods=['GET'])
 def get_all_admins():
     try:
-        # In production, check session for super_admin access
-        # For now, allow all requests
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
+        
+        # Check if user is super admin
+        if session.get('access_level') != 'super_admin':
+            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
         
         response = requests.get(
             f"{SUPABASE_URL}/rest/v1/admin",
@@ -1859,6 +1921,14 @@ def get_all_admins():
 @app.route('/api/create_admin', methods=['POST'])
 def create_admin():
     try:
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
+        
+        # Check if user is super admin
+        if session.get('access_level') != 'super_admin':
+            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
+        
         data = request.get_json()
         
         # Validate required fields
@@ -1923,6 +1993,14 @@ def create_admin():
 @app.route('/api/update_admin', methods=['POST'])
 def update_admin():
     try:
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
+        
+        # Check if user is super admin
+        if session.get('access_level') != 'super_admin':
+            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
+        
         data = request.get_json()
         admin_id = data.get('admin_id')
         
@@ -1968,6 +2046,14 @@ def update_admin():
 @app.route('/api/delete_admin', methods=['POST'])
 def delete_admin():
     try:
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
+        
+        # Check if user is super admin
+        if session.get('access_level') != 'super_admin':
+            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
+        
         data = request.get_json()
         admin_id = data.get('admin_id')
         
@@ -2002,6 +2088,14 @@ def delete_admin():
 @app.route('/api/reset_admin_password', methods=['POST'])
 def reset_admin_password():
     try:
+        # Check if user is logged in
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
+        
+        # Check if user is super admin
+        if session.get('access_level') != 'super_admin':
+            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
+        
         data = request.get_json()
         admin_id = data.get('admin_id')
         new_password = data.get('new_password')
