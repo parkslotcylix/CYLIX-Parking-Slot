@@ -56,19 +56,28 @@ function initializeProfileDropdown() {
   }
 
   // Update dropdown content
-  document.getElementById('dropdownAdminName').textContent = adminName;
-  document.getElementById('dropdownAdminEmail').textContent = adminEmail;
-  document.getElementById('dropdownRoleBadge').innerHTML = roleBadge;
-  document.getElementById('dropdownStatusBadge').innerHTML = statusBadge;
+  const dropdownAdminName = document.getElementById('dropdownAdminName');
+  const dropdownAdminEmail = document.getElementById('dropdownAdminEmail');
+  const dropdownRoleBadge = document.getElementById('dropdownRoleBadge');
+  const dropdownStatusBadge = document.getElementById('dropdownStatusBadge');
+
+  if (dropdownAdminName) dropdownAdminName.textContent = adminName;
+  if (dropdownAdminEmail) dropdownAdminEmail.textContent = adminEmail;
+  if (dropdownRoleBadge) dropdownRoleBadge.innerHTML = roleBadge;
+  if (dropdownStatusBadge) dropdownStatusBadge.innerHTML = statusBadge;
 
   // Setup dropdown toggle
   const profileTrigger = document.getElementById('profileTrigger');
   const dropdownMenu = document.getElementById('dropdownMenu');
 
   if (profileTrigger && dropdownMenu) {
+    // Add click handler
     profileTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
       e.stopPropagation();
+      console.log('Profile trigger clicked');
       dropdownMenu.classList.toggle('show');
+      console.log('Dropdown show class:', dropdownMenu.classList.contains('show'));
     });
 
     // Close dropdown when clicking outside
@@ -76,6 +85,11 @@ function initializeProfileDropdown() {
       if (!profileTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
         dropdownMenu.classList.remove('show');
       }
+    });
+  } else {
+    console.error('Profile dropdown elements not found:', {
+      profileTrigger: !!profileTrigger,
+      dropdownMenu: !!dropdownMenu
     });
   }
 

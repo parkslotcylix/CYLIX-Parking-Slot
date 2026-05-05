@@ -4,8 +4,12 @@
 
 /* Profile Dropdown Container */
 .profile-dropdown {
-  position: relative;
-  display: inline-block;
+  position: relative !important;
+  display: inline-block !important;
+}
+
+.profile-dropdown * {
+  box-sizing: border-box !important;
 }
 
 /* Profile Trigger (clickable area) */
@@ -83,26 +87,26 @@
 
 /* Dropdown Menu */
 .dropdown-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  min-width: 280px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
-  z-index: 1000;
-  overflow: hidden;
+  position: absolute !important;
+  top: calc(100% + 10px) !important;
+  right: 0 !important;
+  min-width: 280px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(-10px) !important;
+  transition: all 0.3s ease !important;
+  z-index: 9999 !important;
+  overflow: hidden !important;
 }
 
 .dropdown-menu.show {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
 }
 
 /* Dropdown Header (Admin Info) */
@@ -211,36 +215,56 @@
 
 /* Dropdown Items */
 .dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  color: #333;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 20px !important;
+  color: #333 !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  border: none !important;
+  background: transparent !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .dropdown-item:hover {
-  background: #f5f5f5;
-  color: #667eea;
+  background: #f5f5f5 !important;
+  color: #667eea !important;
+  text-decoration: none !important;
 }
 
 .dropdown-item.logout {
-  color: #f44336;
+  color: #f44336 !important;
 }
 
 .dropdown-item.logout:hover {
-  background: #ffebee;
-  color: #d32f2f;
+  background: #ffebee !important;
+  color: #d32f2f !important;
+}
+
+.dropdown-item span:first-child {
+  font-size: 16px !important;
+  width: 20px !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+.dropdown-item span:last-child {
+  flex: 1 !important;
+  text-align: left !important;
 }
 
 /* Dropdown Divider */
 .dropdown-divider {
-  height: 1px;
-  background: #e0e0e0;
-  margin: 8px 0;
+  height: 1px !important;
+  background: #e0e0e0 !important;
+  margin: 8px 0 !important;
+  border: none !important;
+  width: 100% !important;
 }
 
 /* Responsive Design */
@@ -279,4 +303,44 @@
   .dropdown-menu.show {
     transform: translateY(0);
   }
+}
+
+/* Additional fixes for dropdown visibility */
+.dropdown-menu .dropdown-body {
+  display: block !important;
+  visibility: visible !important;
+}
+
+.dropdown-menu.show .dropdown-body {
+  display: block !important;
+}
+
+.dropdown-menu.show .dropdown-item {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+/* Ensure dropdown is above other elements */
+nav .profile-dropdown {
+  z-index: 10000 !important;
+}
+
+nav .profile-dropdown .dropdown-menu {
+  z-index: 10001 !important;
+}
+
+/* Fix for any potential navbar conflicts */
+nav ul li.profile-dropdown {
+  position: relative !important;
+  z-index: 10000 !important;
+}
+
+/* Debug styles - remove after testing */
+.dropdown-menu.show {
+  border: 2px solid red !important; /* Temporary debug border */
+}
+
+.dropdown-item {
+  border: 1px solid blue !important; /* Temporary debug border */
+  min-height: 40px !important;
 }
