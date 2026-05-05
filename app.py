@@ -1586,41 +1586,70 @@ def upload_profile_picture():
         if not allowed_file(file.filename):
             return jsonify({'success': False, 'error': 'Invalid file type. Allowed: png, jpg, jpeg, gif, webp'}), 400
         
-        if file.content_length > MAX_FILE_SIZE:
+        # Read file content
+        file_content = file.read()
+        
+        if len(file_content) > MAX_FILE_SIZE:
             return jsonify({'success': False, 'error': 'File size exceeds 5MB limit'}), 400
         
         # Generate secure filename
         ext = file.filename.rsplit('.', 1)[1].lower()
-        filename = secure_filename(f"admin_{admin_id}_{int(time.time())}.{ext}")
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        filename = f"admin_{admin_id}_{int(time.time())}.{ext}"
         
-        # Save file
-        file.save(filepath)
-        
-        # Store path in database
-        picture_url = f'/static/images/profiles/{filename}'
-        connection = get_db_connection()
-        
-        if connection is None:
-            os.remove(filepath)  # Delete uploaded file if DB connection fails
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
+        # Upload to Supabase Storage
+        storage_path = f"profile-pictures/{filename}"
         
         try:
-            cursor = get_db_cursor(connection)
-            cursor.execute(
-                "UPDATE admin SET profile_picture = %s WHERE admin_id = %s",
-                (picture_url, admin_id)
+            # Upload file to Supabase Storage using REST API
+            upload_url = f"{SUPABASE_URL}/storage/v1/object/avatars/{storage_path}"
+            
+            upload_headers = {
+                'Authorization': f'Bearer {SUPABASE_API_KEY}',
+                'Content-Type': f'image/{ext}',
+                'apikey': SUPABASE_API_KEY
+            }
+            
+            upload_response = requests.post(
+                upload_url,
+                headers=upload_headers,
+                data=file_content,
+                timeout=30
             )
-            connection.commit()
-            cursor.close()
+            
+            if upload_response.status_code not in [200, 201]:
+                print(f"Supabase storage upload failed: {upload_response.status_code} - {upload_response.text}")
+                return jsonify({'success': False, 'error': 'Failed to upload to storage'}), 500
+            
+            # Get public URL
+            picture_url = f"{SUPABASE_URL}/storage/v1/object/public/avatars/{storage_path}"
+            
+        except Exception as storage_error:
+            print(f"Storage error: {storage_error}")
+            return jsonify({'success': False, 'error': 'Storage upload failed'}), 500
+        
+        # Update database with new picture URL
+        try:
+            update_resp = requests.patch(
+                f"{SUPABASE_URL}/rest/v1/admin",
+                headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+                params={'admin_id': f'eq.{admin_id}'},
+                json={'profile_picture': picture_url},
+                timeout=10
+            )
+            
+            if update_resp.status_code not in [200, 204]:
+                return jsonify({'success': False, 'error': 'Failed to update database'}), 500
             
             return jsonify({
                 'success': True,
                 'picture_url': picture_url,
                 'message': 'Profile picture updated successfully'
             })
-        finally:
-            connection.close()
+            
+        except Exception as db_error:
+            print(f"Database update error: {db_error}")
+            return jsonify({'success': False, 'error': 'Database update failed'}), 500
+            
     except Exception as e:
         print(f"Upload error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
