@@ -4,7 +4,6 @@ import requests
 import serial
 import numpy as np
 import time
-from datetime import datetime
 
 # --- CONFIG ---
 CAM_URL = "http://192.168.68.146:81/stream"
@@ -42,18 +41,18 @@ while empty_reference is None:
 print("Running Detection...")
 
 def send_slot_to_backend(slot_id, status):
-    """Send slot status to Flask backend API"""
+    """Send slot status to Flask backend API with client timestamp"""
     try:
-        # Get current client timestamp
-        now = datetime.now()
-        client_timestamp = now.isoformat()
+        from datetime import datetime
+        # Send current client timestamp with the request
+        client_timestamp = datetime.now().isoformat()
         
         response = requests.post(
             FLASK_API,
             json={
                 'slot_id': slot_id, 
                 'status': status,
-                'client_timestamp': client_timestamp  # Send client's local time
+                'client_timestamp': client_timestamp  # Add client timestamp
             },
             timeout=5  # Increased timeout from 2 to 5 seconds
         )
