@@ -451,11 +451,25 @@
     return allHistory.filter(record => isInSelectedRange(record.check_in_time));
   }
 
-  function formatDuration(duration) {
-    const value = Number(duration) || 0;
-    const hours = Math.floor(value);
-    const minutes = Math.round((value - hours) * 60);
-    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  function formatDuration(durationHours) {
+    const value = Number(durationHours) || 0;
+    
+    // Convert hours to total minutes
+    const totalMinutes = Math.round(value * 60);
+    
+    if (totalMinutes < 1) {
+      // Less than 1 minute - show seconds
+      const seconds = Math.round(value * 3600);
+      return seconds > 0 ? `${seconds} sec` : '0 sec';
+    } else if (totalMinutes < 60) {
+      // Less than 60 minutes - show minutes only
+      return `${totalMinutes} min`;
+    } else {
+      // 60+ minutes - show hours and minutes
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return minutes > 0 ? `${hours} hr ${minutes} min` : `${hours} hr`;
+    }
   }
 
   function setEmptyState() {
@@ -703,7 +717,19 @@
     filteredHistory.forEach(record => {
       const checkIn = parseDateTime(record.check_in_time)?.toLocaleString() || 'N/A';
       const checkOut = parseDateTime(record.check_out_time)?.toLocaleString() || 'N/A';
-      const duration = record.duration_hours ? parseFloat(record.duration_hours).toFixed(2) : 'N/A';
+      
+      // Calculate duration in minutes from check_in and check_out
+      let durationDisplay = 'N/A';
+      if (record.check_in_time && record.check_out_time) {
+        const checkInDate = parseDateTime(record.check_in_time);
+        const checkOutDate = parseDateTime(record.check_out_time);
+        if (checkInDate && checkOutDate) {
+          const durationMs = checkOutDate - checkInDate;
+          const durationHours = durationMs / (1000 * 60 * 60);
+          durationDisplay = formatDuration(durationHours);
+        }
+      }
+      
       const status = record.status || 'N/A';
 
       historyRows += `
@@ -711,7 +737,7 @@
           <td>Slot ${record.slot_id}</td>
           <td>${checkIn}</td>
           <td>${checkOut}</td>
-          <td>${duration} hrs</td>
+          <td>${durationDisplay}</td>
           <td>${status}</td>
         </tr>
       `;
