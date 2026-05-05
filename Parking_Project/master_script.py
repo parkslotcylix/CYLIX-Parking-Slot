@@ -41,21 +41,29 @@ while empty_reference is None:
 print("Running Detection...")
 
 def send_slot_to_backend(slot_id, status):
-    """Send slot status to Flask backend API"""
+    """Send slot status to Flask backend API with client timestamp"""
     try:
+        # Generate client timestamp in ISO format
+        from datetime import datetime
+        client_timestamp = datetime.now().isoformat() + 'Z'
+        
         response = requests.post(
             FLASK_API,
-            json={'slot_id': slot_id, 'status': status},
+            json={
+                'slot_id': slot_id,
+                'status': status,
+                'client_timestamp': client_timestamp
+            },
             timeout=5  # Increased timeout from 2 to 5 seconds
         )
         if response.status_code == 200:
-            print(f"✓ Slot {slot_id} updated to backend: {status}")
+            print(f"✓ Slot {slot_id} updated to backend: {status} at {client_timestamp}")
         else:
             print(f"✗ Backend error for Slot {slot_id}: {response.status_code}")
     except requests.exceptions.Timeout:
         print(f"⚠ Backend timeout for Slot {slot_id} (is Flask running?)")
     except requests.exceptions.ConnectionError:
-        print(f"⚠ Backend unreachable for Slot {slot_id} - Check if Flask is running on port 5000")
+        print(f"⚠ Backend unreachable for Slot {slot_id} - Check if Flask is running")
     except Exception as e:
         print(f"✗ Error sending Slot {slot_id}: {str(e)}")
 

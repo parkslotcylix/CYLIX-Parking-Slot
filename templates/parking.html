@@ -729,52 +729,70 @@
         .catch(error => console.error('Toggle error:', error));
     }
 
-    // Hardware detection endpoint - called by camera/ESP32 when car is detected
+    // Hardware update function - called by camera/ESP32 detection
     function sendHardwareUpdate(slotId, status) {
       const now = new Date();
       const clientTimestamp = now.toISOString();
+      
+      console.log(`[Hardware] Slot ${slotId} → ${status === 1 ? 'Occupied' : 'Available'} at ${formatDateTime(now)}`);
 
-      console.log(`[Hardware] Sending update: Slot ${slotId}, Status ${status}, Timestamp ${clientTimestamp}`);
+      // Update UI immediately BEFORE waiting for server response
+      const timeValEl = document.getElementById('stime' + slotId + '-value');
+      const timeEl = document.getElementById('stime' + slotId);
+      const card = document.getElementById('scard' + slotId);
+      const badge = document.getElementById('sbadge' + slotId);
+      const car = document.getElementById('scar' + slotId);
 
+      if (status === 1) {
+        // Car entered - Occupied
+        slotTimestamps[slotId] = now;
+        if (timeValEl) timeValEl.textContent = formatDateTime(now);
+        if (timeEl) timeEl.style.display = 'block';
+        if (card) card.className = 'slot-card occupied-card';
+        if (badge) {
+          badge.className = 'slot-badge badge-occupied';
+          badge.innerHTML = '<span>●</span> OCCUPIED';
+        }
+        if (car) car.className = 'car-icon car-visible';
+        saveTimestampsToStorage();
+      } else {
+        // Car left - Available
+        delete slotTimestamps[slotId];
+        if (timeEl) timeEl.style.display = 'none';
+        if (card) card.className = 'slot-card available-card';
+        if (badge) {
+          badge.className = 'slot-badge badge-available';
+          badge.innerHTML = '<span>●</span> AVAILABLE';
+        }
+        if (car) car.className = 'car-icon car-hidden';
+        saveTimestampsToStorage();
+      }
+
+      // Send to backend with client timestamp
       fetch(`${API_BASE}/update_slot_from_hardware`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slot_id: slotId,
-          status: status,  // 0 = Available, 1 = Occupied
+          status: status,
           client_timestamp: clientTimestamp
         })
       })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            console.log(`[Hardware] Slot ${slotId} updated: ${data.new_status}`);
-            
-            // Update UI immediately with current timestamp
-            const timeValEl = document.getElementById('stime' + slotId + '-value');
-            const timeEl = document.getElementById('stime' + slotId);
-
-            if (status === 1) {
-              // Car detected - slot is now occupied
-              slotTimestamps[slotId] = now;
-              if (timeValEl) timeValEl.textContent = formatDateTime(now);
-              if (timeEl) timeEl.style.display = 'block';
-              saveTimestampsToStorage();
-            } else {
-              // Car left - slot is now available
-              delete slotTimestamps[slotId];
-              if (timeEl) timeEl.style.display = 'none';
-              saveTimestampsToStorage();
-            }
-
-            // Refresh slot data from server
+            console.log(`[Hardware] Backend confirmed: Slot ${slotId} → ${data.new_status}`);
+            // Refresh to sync with server
             loadParkingSlots();
           } else {
-            console.error(`[Hardware] Error updating Slot ${slotId}:`, data.error);
+            console.error('[Hardware] Backend error:', data.error);
           }
         })
-        .catch(error => console.error('[Hardware] Request error:', error));
+        .catch(error => console.error('[Hardware] Network error:', error));
     }
+
+    // Expose sendHardwareUpdate globally for camera/ESP32 to call
+    window.sendHardwareUpdate = sendHardwareUpdate;
 
     function resetSlots() {
       if (confirm('Are you sure you want to reset all slots to available?')) {
