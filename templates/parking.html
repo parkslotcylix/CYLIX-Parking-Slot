@@ -431,8 +431,10 @@
             <span>●</span> AVAILABLE
           </div>
           <div class="slot-timestamp" id="stime1" style="display:none;">
-            <span class="timestamp-label">Parking Duration</span>
-            <span class="timestamp-value" id="stime1-value">0m 0s</span>
+            <span class="timestamp-label">Occupied Since</span>
+            <span class="timestamp-value" id="stime1-value">--:-- --</span>
+            <span class="timestamp-label" style="margin-top: 6px; display: block;">Duration</span>
+            <span class="timestamp-value" id="sduration1">0m</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -444,8 +446,10 @@
             <span>●</span> OCCUPIED
           </div>
           <div class="slot-timestamp" id="stime2" style="display:block;">
-            <span class="timestamp-label">Parking Duration</span>
-            <span class="timestamp-value" id="stime2-value">0m 0s</span>
+            <span class="timestamp-label">Occupied Since</span>
+            <span class="timestamp-value" id="stime2-value">--:-- --</span>
+            <span class="timestamp-label" style="margin-top: 6px; display: block;">Duration</span>
+            <span class="timestamp-value" id="sduration2">0m</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -457,8 +461,10 @@
             <span>●</span> AVAILABLE
           </div>
           <div class="slot-timestamp" id="stime3" style="display:none;">
-            <span class="timestamp-label">Parking Duration</span>
-            <span class="timestamp-value" id="stime3-value">0m 0s</span>
+            <span class="timestamp-label">Occupied Since</span>
+            <span class="timestamp-value" id="stime3-value">--:-- --</span>
+            <span class="timestamp-label" style="margin-top: 6px; display: block;">Duration</span>
+            <span class="timestamp-value" id="sduration3">0m</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -506,6 +512,9 @@
       3: 'red.png'
     };
 
+    // Store actual timestamps (ISO format) for duration calculation
+    const slotCheckInTimes = {};
+
     // Load timestamps from localStorage on page load
     function loadTimestampsFromStorage() {
       try {
@@ -514,6 +523,7 @@
           const parsed = JSON.parse(stored);
           for (let slotNum in parsed) {
             slotTimestamps[slotNum] = new Date(parsed[slotNum]);
+            slotCheckInTimes[slotNum] = parsed[slotNum]; // Store ISO string for duration calc
           }
         }
       } catch (error) {
@@ -527,6 +537,7 @@
         const toStore = {};
         for (let slotNum in slotTimestamps) {
           toStore[slotNum] = slotTimestamps[slotNum].toISOString();
+          slotCheckInTimes[slotNum] = slotTimestamps[slotNum].toISOString();
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
       } catch (error) {
@@ -545,6 +556,24 @@
       const hourStr = String(hours).padStart(2, '0');
       return `${hourStr}:${mins}:${secs} ${ampm}`;
     }
+
+    // Calculate duration from check-in time to now
+    function calculateDuration(checkInTime) {
+      if (!checkInTime) return '0m';
+      const checkIn = new Date(checkInTime);
+      const now = new Date();
+      const diffMs = now - checkIn;
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (diffHours > 0) {
+        return `${diffHours}h ${diffMins}m`;
+      } else {
+        return `${diffMins}m`;
+      }
+    }
+
+    // Update hardware status indicator
     function updateHardwareStatus() {
       const statusEl = document.getElementById('hardware-status');
       if (!statusEl) return;
@@ -661,15 +690,18 @@
             timeEl.style.display = 'block';
             if (slotTimestamps[slotNum]) {
               // Use client-side timestamp if already captured
-              const duration = formatDuration(slotTimestamps[slotNum]);
-              timeValEl.textContent = duration;
+              const checkInTime = slotTimestamps[slotNum].toISOString();
+              slotCheckInTimes[slotNum] = checkInTime;
+              timeValEl.textContent = formatDateTime(checkInTime);
+              saveTimestampsToStorage();
             } else if (slot.check_in_time) {
               // Fall back to DB timestamp, but parse it correctly
               const dbCheckIn = parseDateTime(slot.check_in_time);
               if (dbCheckIn) {
                 slotTimestamps[slotNum] = dbCheckIn;
-                const duration = formatDuration(dbCheckIn);
-                timeValEl.textContent = duration;
+                const checkInTime = dbCheckIn.toISOString();
+                slotCheckInTimes[slotNum] = checkInTime;
+                timeValEl.textContent = formatDateTime(checkInTime);
                 saveTimestampsToStorage();
               }
             }
@@ -679,6 +711,7 @@
             if (slotTimestamps[slotNum]) {
               console.log(`Clearing timestamp for Slot ${slotNum}`);
               delete slotTimestamps[slotNum];
+              delete slotCheckInTimes[slotNum];
               saveTimestampsToStorage();
             }
           }
@@ -712,11 +745,14 @@
             if (data.new_status === 'Occupied') {
               // Use the current time (now) for the timestamp, not the server response time
               slotTimestamps[n] = now;
-              if (timeValEl) timeValEl.textContent = formatDateTime(now);
+              const checkInTime = now.toISOString();
+              slotCheckInTimes[n] = checkInTime;
+              if (timeValEl) timeValEl.textContent = formatDateTime(checkInTime);
               if (timeEl) timeEl.style.display = 'block';
               saveTimestampsToStorage();
             } else {
               delete slotTimestamps[n];
+              delete slotCheckInTimes[n];
               if (timeEl) timeEl.style.display = 'none';
               saveTimestampsToStorage();
             }
@@ -765,12 +801,18 @@
       const currentTimeEl = document.getElementById('current-time');
       if (currentTimeEl) currentTimeEl.textContent = timeDisplay;
 
-      // Update occupied-since durations in real-time
-      for (let slotNum in slotTimestamps) {
+      // Update occupied-since timestamps and durations in real-time
+      for (let slotNum in slotCheckInTimes) {
         const timeValEl = document.getElementById('stime' + slotNum + '-value');
         if (timeValEl) {
-          const duration = formatDuration(slotTimestamps[slotNum]);
-          timeValEl.textContent = duration;
+          // Show check-in time
+          timeValEl.textContent = formatDateTime(slotCheckInTimes[slotNum]);
+        }
+        
+        // Update duration display if it exists
+        const durationEl = document.getElementById('sduration' + slotNum);
+        if (durationEl) {
+          durationEl.textContent = calculateDuration(slotCheckInTimes[slotNum]);
         }
       }
     }
