@@ -929,10 +929,34 @@
   }
 
   // Handle logout
-  function handleLogout(event) {
+  async function handleLogout(event) {
     event.preventDefault();
     if (confirm('Are you sure you want to logout?')) {
-      window.location.href = '/';
+      try {
+        // Call backend logout endpoint to clear server-side session
+        const response = await fetch(`${API_BASE}/api/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        // Clear client-side storage (if any)
+        sessionStorage.removeItem('user_email');
+        sessionStorage.removeItem('user_id');
+        sessionStorage.removeItem('access_level');
+        
+        // Redirect to home page
+        window.location.href = '/';
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Still clear client-side and redirect even if backend fails
+        sessionStorage.removeItem('user_email');
+        sessionStorage.removeItem('user_id');
+        sessionStorage.removeItem('access_level');
+        window.location.href = '/';
+      }
     }
   }
 </script>

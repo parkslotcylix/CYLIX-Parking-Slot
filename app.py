@@ -1751,6 +1751,25 @@ def check_session():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# Logout endpoint
+@app.route('/api/logout', methods=['POST', 'OPTIONS'])
+def logout():
+    """Clear server-side session and log out the user"""
+    try:
+        if request.method == 'OPTIONS':
+            return '', 204
+        
+        # Clear all session data
+        session.clear()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Logged out successfully'
+        })
+    except Exception as e:
+        print(f"Logout error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Test Supabase Storage connection
 @app.route('/api/test_storage', methods=['GET'])
 def test_storage():
