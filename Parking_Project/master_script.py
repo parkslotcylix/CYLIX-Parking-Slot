@@ -42,17 +42,18 @@ while empty_reference is None:
 print("Running Detection...")
 
 def send_slot_to_backend(slot_id, status):
-    """Send slot status to Flask backend API with client timestamp"""
+    """Send slot status to Flask backend API"""
     try:
-        # Get current time in ISO format for accurate timezone handling
-        client_timestamp = datetime.now().isoformat()
+        # Get current client timestamp
+        now = datetime.now()
+        client_timestamp = now.isoformat()
         
         response = requests.post(
             FLASK_API,
             json={
                 'slot_id': slot_id, 
                 'status': status,
-                'client_timestamp': client_timestamp  # Send client timestamp
+                'client_timestamp': client_timestamp  # Send client's local time
             },
             timeout=5  # Increased timeout from 2 to 5 seconds
         )
