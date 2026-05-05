@@ -1,7 +1,10 @@
 // Authentication and Access Control
 // This script checks user session and controls navigation visibility
 
-const API_BASE = window.location.origin + '/api';
+// Only declare API_BASE if it doesn't exist
+if (typeof API_BASE === 'undefined') {
+    var API_BASE = window.location.origin + '/api';
+}
 
 // Check session and update navigation
 async function checkSessionAndUpdateNav() {
@@ -16,10 +19,13 @@ async function checkSessionAndUpdateNav() {
             // Hide Admin Management link if not super admin
             const adminManagementLinks = document.querySelectorAll('a[href="/admin-management"]');
             adminManagementLinks.forEach(link => {
-                if (data.access_level !== 'super_admin') {
-                    link.parentElement.style.display = 'none';
-                } else {
-                    link.parentElement.style.display = 'list-item';
+                const parentLi = link.closest('li');
+                if (parentLi) {
+                    if (data.access_level !== 'super_admin') {
+                        parentLi.style.display = 'none';
+                    } else {
+                        parentLi.style.display = 'list-item';
+                    }
                 }
             });
             
@@ -33,7 +39,10 @@ async function checkSessionAndUpdateNav() {
             // Not logged in - hide admin management link
             const adminManagementLinks = document.querySelectorAll('a[href="/admin-management"]');
             adminManagementLinks.forEach(link => {
-                link.parentElement.style.display = 'none';
+                const parentLi = link.closest('li');
+                if (parentLi) {
+                    parentLi.style.display = 'none';
+                }
             });
         }
     } catch (error) {
@@ -41,7 +50,10 @@ async function checkSessionAndUpdateNav() {
         // Hide admin management link on error
         const adminManagementLinks = document.querySelectorAll('a[href="/admin-management"]');
         adminManagementLinks.forEach(link => {
-            link.parentElement.style.display = 'none';
+            const parentLi = link.closest('li');
+            if (parentLi) {
+                parentLi.style.display = 'none';
+            }
         });
     }
 }
