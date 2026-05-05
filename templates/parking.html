@@ -431,8 +431,8 @@
             <span>●</span> AVAILABLE
           </div>
           <div class="slot-timestamp" id="stime1" style="display:none;">
-            <span class="timestamp-label">Occupied Since</span>
-            <span class="timestamp-value" id="stime1-value">--:-- --</span>
+            <span class="timestamp-label">Parking Duration</span>
+            <span class="timestamp-value" id="stime1-value">0m 0s</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -444,8 +444,8 @@
             <span>●</span> OCCUPIED
           </div>
           <div class="slot-timestamp" id="stime2" style="display:block;">
-            <span class="timestamp-label">Occupied Since</span>
-            <span class="timestamp-value" id="stime2-value">--:-- --</span>
+            <span class="timestamp-label">Parking Duration</span>
+            <span class="timestamp-value" id="stime2-value">0m 0s</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -457,8 +457,8 @@
             <span>●</span> AVAILABLE
           </div>
           <div class="slot-timestamp" id="stime3" style="display:none;">
-            <span class="timestamp-label">Occupied Since</span>
-            <span class="timestamp-value" id="stime3-value">--:-- --</span>
+            <span class="timestamp-label">Parking Duration</span>
+            <span class="timestamp-value" id="stime3-value">0m 0s</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -545,8 +545,6 @@
       const hourStr = String(hours).padStart(2, '0');
       return `${hourStr}:${mins}:${secs} ${ampm}`;
     }
-
-    // Update hardware status indicator
     function updateHardwareStatus() {
       const statusEl = document.getElementById('hardware-status');
       if (!statusEl) return;
@@ -663,13 +661,15 @@
             timeEl.style.display = 'block';
             if (slotTimestamps[slotNum]) {
               // Use client-side timestamp if already captured
-              timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
+              const duration = formatDuration(slotTimestamps[slotNum]);
+              timeValEl.textContent = duration;
             } else if (slot.check_in_time) {
               // Fall back to DB timestamp, but parse it correctly
               const dbCheckIn = parseDateTime(slot.check_in_time);
               if (dbCheckIn) {
                 slotTimestamps[slotNum] = dbCheckIn;
-                timeValEl.textContent = formatDateTime(dbCheckIn);
+                const duration = formatDuration(dbCheckIn);
+                timeValEl.textContent = duration;
                 saveTimestampsToStorage();
               }
             }
@@ -765,11 +765,12 @@
       const currentTimeEl = document.getElementById('current-time');
       if (currentTimeEl) currentTimeEl.textContent = timeDisplay;
 
-      // Keep occupied-since timestamps refreshed
+      // Update occupied-since durations in real-time
       for (let slotNum in slotTimestamps) {
         const timeValEl = document.getElementById('stime' + slotNum + '-value');
         if (timeValEl) {
-          timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
+          const duration = formatDuration(slotTimestamps[slotNum]);
+          timeValEl.textContent = duration;
         }
       }
     }
