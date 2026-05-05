@@ -873,7 +873,7 @@ def reset_slots():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# Update slot status from hardware (camera/Arduino)
+# Update slot status from hardware (camera/Arduino) with client timestamp
 @app.route('/api/update_slot_from_hardware', methods=['POST', 'OPTIONS'])
 def update_slot_from_hardware():
     try:
