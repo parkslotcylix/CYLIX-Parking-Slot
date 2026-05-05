@@ -23,7 +23,7 @@ try:
 except:
     pass
 
-app = Flask(_name_, template_folder='templates', static_folder='static', static_url_path='/static')
+app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Configuration - Supabase REST API (HTTP-based, works on any network)
 # Hardcoded defaults (will be overridden by environment variables if set)
