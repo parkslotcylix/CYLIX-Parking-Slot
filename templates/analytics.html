@@ -360,7 +360,7 @@
     <div class="analytics-card">
       <div class="ac-icon">⏱</div>
       <div class="ac-num" id="ac-duration">0h</div>
-      <div class="ac-label">Longest Parking Duration</div>
+      <div class="ac-label">Average Parking Duration</div>
       <div class="ac-change" id="ac-duration-change">+0%</div>
     </div>
     <div class="analytics-card">
@@ -504,9 +504,9 @@
     const completedSessions = filteredHistory.filter(record => (record.status || '').toLowerCase() === 'completed');
     const activeSessions = filteredHistory.filter(record => (record.status || '').toLowerCase() === 'active').length;
     
-    // Calculate maximum duration from completed sessions ONLY
+    // Calculate AVERAGE duration from completed sessions ONLY
     // ONLY use check_out_time - check_in_time, ignore duration_hours field
-    let maxDuration = 0;
+    let totalDuration = 0;
     let validSessions = 0;
     
     if (completedSessions.length > 0) {
@@ -523,18 +523,22 @@
             
             console.log(`Slot ${record.slot_id}: ${checkIn.toISOString()} → ${checkOut.toISOString()} = ${durationHours.toFixed(2)}h`);
             
-            // Update max if this duration is larger
-            if (durationHours > maxDuration) {
-              maxDuration = durationHours;
-            }
+            // Add to total
+            totalDuration += durationHours;
             validSessions++;
           }
         }
       });
-      console.log(`Calculated max_duration: ${maxDuration.toFixed(2)}h from ${validSessions}/${completedSessions.length} valid completed sessions`);
+      
+      // Calculate average
+      const averageDuration = validSessions > 0 ? totalDuration / validSessions : 0;
+      console.log(`Calculated avg_duration: ${averageDuration.toFixed(2)}h from ${validSessions}/${completedSessions.length} valid completed sessions (total: ${totalDuration.toFixed(2)}h)`);
     } else {
-      console.log(`No completed sessions found for max duration calculation`);
+      console.log(`No completed sessions found for average duration calculation`);
     }
+    
+    // Calculate average duration
+    const averageDuration = validSessions > 0 ? totalDuration / validSessions : 0;
 
     const availableSlots = allSlots.filter(slot => (slot.slot_status || '').toLowerCase() === 'available').length;
     const occupiedSlots = allSlots.filter(slot => (slot.slot_status || '').toLowerCase() === 'occupied').length;
@@ -559,7 +563,7 @@
     });
 
     document.getElementById('ac-vehicles').textContent = completedSessions.length;
-    document.getElementById('ac-duration').textContent = formatDuration(maxDuration);
+    document.getElementById('ac-duration').textContent = formatDuration(averageDuration);
     document.getElementById('analytics-slots-num').textContent = `${availableSlots}/${totalSlots}`;
     document.getElementById('ac-active-sessions').textContent = `${activeSessions} Active`;
 
