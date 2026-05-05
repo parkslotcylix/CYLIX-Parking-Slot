@@ -1801,7 +1801,7 @@ def create_password_reset_table():
     """Skip startup verification to avoid blocking app launch on network issues."""
     print("Password reset table check skipped at startup")
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     # Load environment variables
     load_dotenv(override=True)
     
