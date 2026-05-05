@@ -433,8 +433,6 @@
           <div class="slot-timestamp" id="stime1" style="display:none;">
             <span class="timestamp-label">Occupied Since</span>
             <span class="timestamp-value" id="stime1-value">--:-- --</span>
-            <span class="timestamp-label" style="margin-top: 6px; display: block;">Duration</span>
-            <span class="timestamp-value" id="sduration1">0m</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -448,8 +446,6 @@
           <div class="slot-timestamp" id="stime2" style="display:block;">
             <span class="timestamp-label">Occupied Since</span>
             <span class="timestamp-value" id="stime2-value">--:-- --</span>
-            <span class="timestamp-label" style="margin-top: 6px; display: block;">Duration</span>
-            <span class="timestamp-value" id="sduration2">0m</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -463,8 +459,6 @@
           <div class="slot-timestamp" id="stime3" style="display:none;">
             <span class="timestamp-label">Occupied Since</span>
             <span class="timestamp-value" id="stime3-value">--:-- --</span>
-            <span class="timestamp-label" style="margin-top: 6px; display: block;">Duration</span>
-            <span class="timestamp-value" id="sduration3">0m</span>
           </div>
           <div class="tap-hint">TAP TO CHANGE</div>
         </div>
@@ -512,9 +506,6 @@
       3: 'red.png'
     };
 
-    // Store actual timestamps (ISO format) for duration calculation
-    const slotCheckInTimes = {};
-
     // Load timestamps from localStorage on page load
     function loadTimestampsFromStorage() {
       try {
@@ -523,7 +514,6 @@
           const parsed = JSON.parse(stored);
           for (let slotNum in parsed) {
             slotTimestamps[slotNum] = new Date(parsed[slotNum]);
-            slotCheckInTimes[slotNum] = parsed[slotNum]; // Store ISO string for duration calc
           }
         }
       } catch (error) {
@@ -537,7 +527,6 @@
         const toStore = {};
         for (let slotNum in slotTimestamps) {
           toStore[slotNum] = slotTimestamps[slotNum].toISOString();
-          slotCheckInTimes[slotNum] = slotTimestamps[slotNum].toISOString();
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
       } catch (error) {
@@ -555,22 +544,6 @@
       hours = hours % 12 || 12;
       const hourStr = String(hours).padStart(2, '0');
       return `${hourStr}:${mins}:${secs} ${ampm}`;
-    }
-
-    // Calculate duration from check-in time to now
-    function calculateDuration(checkInTime) {
-      if (!checkInTime) return '0m';
-      const checkIn = new Date(checkInTime);
-      const now = new Date();
-      const diffMs = now - checkIn;
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      
-      if (diffHours > 0) {
-        return `${diffHours}h ${diffMins}m`;
-      } else {
-        return `${diffMins}m`;
-      }
     }
 
     // Update hardware status indicator
@@ -690,18 +663,13 @@
             timeEl.style.display = 'block';
             if (slotTimestamps[slotNum]) {
               // Use client-side timestamp if already captured
-              const checkInTime = slotTimestamps[slotNum].toISOString();
-              slotCheckInTimes[slotNum] = checkInTime;
-              timeValEl.textContent = formatDateTime(checkInTime);
-              saveTimestampsToStorage();
+              timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
             } else if (slot.check_in_time) {
               // Fall back to DB timestamp, but parse it correctly
               const dbCheckIn = parseDateTime(slot.check_in_time);
               if (dbCheckIn) {
                 slotTimestamps[slotNum] = dbCheckIn;
-                const checkInTime = dbCheckIn.toISOString();
-                slotCheckInTimes[slotNum] = checkInTime;
-                timeValEl.textContent = formatDateTime(checkInTime);
+                timeValEl.textContent = formatDateTime(dbCheckIn);
                 saveTimestampsToStorage();
               }
             }
@@ -711,7 +679,6 @@
             if (slotTimestamps[slotNum]) {
               console.log(`Clearing timestamp for Slot ${slotNum}`);
               delete slotTimestamps[slotNum];
-              delete slotCheckInTimes[slotNum];
               saveTimestampsToStorage();
             }
           }
@@ -745,14 +712,11 @@
             if (data.new_status === 'Occupied') {
               // Use the current time (now) for the timestamp, not the server response time
               slotTimestamps[n] = now;
-              const checkInTime = now.toISOString();
-              slotCheckInTimes[n] = checkInTime;
-              if (timeValEl) timeValEl.textContent = formatDateTime(checkInTime);
+              if (timeValEl) timeValEl.textContent = formatDateTime(now);
               if (timeEl) timeEl.style.display = 'block';
               saveTimestampsToStorage();
             } else {
               delete slotTimestamps[n];
-              delete slotCheckInTimes[n];
               if (timeEl) timeEl.style.display = 'none';
               saveTimestampsToStorage();
             }
@@ -763,6 +727,53 @@
           }
         })
         .catch(error => console.error('Toggle error:', error));
+    }
+
+    // Hardware detection endpoint - called by camera/ESP32 when car is detected
+    function sendHardwareUpdate(slotId, status) {
+      const now = new Date();
+      const clientTimestamp = now.toISOString();
+
+      console.log(`[Hardware] Sending update: Slot ${slotId}, Status ${status}, Timestamp ${clientTimestamp}`);
+
+      fetch(`${API_BASE}/update_slot_from_hardware`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slot_id: slotId,
+          status: status,  // 0 = Available, 1 = Occupied
+          client_timestamp: clientTimestamp
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log(`[Hardware] Slot ${slotId} updated: ${data.new_status}`);
+            
+            // Update UI immediately with current timestamp
+            const timeValEl = document.getElementById('stime' + slotId + '-value');
+            const timeEl = document.getElementById('stime' + slotId);
+
+            if (status === 1) {
+              // Car detected - slot is now occupied
+              slotTimestamps[slotId] = now;
+              if (timeValEl) timeValEl.textContent = formatDateTime(now);
+              if (timeEl) timeEl.style.display = 'block';
+              saveTimestampsToStorage();
+            } else {
+              // Car left - slot is now available
+              delete slotTimestamps[slotId];
+              if (timeEl) timeEl.style.display = 'none';
+              saveTimestampsToStorage();
+            }
+
+            // Refresh slot data from server
+            loadParkingSlots();
+          } else {
+            console.error(`[Hardware] Error updating Slot ${slotId}:`, data.error);
+          }
+        })
+        .catch(error => console.error('[Hardware] Request error:', error));
     }
 
     function resetSlots() {
@@ -801,18 +812,11 @@
       const currentTimeEl = document.getElementById('current-time');
       if (currentTimeEl) currentTimeEl.textContent = timeDisplay;
 
-      // Update occupied-since timestamps and durations in real-time
-      for (let slotNum in slotCheckInTimes) {
+      // Keep occupied-since timestamps refreshed
+      for (let slotNum in slotTimestamps) {
         const timeValEl = document.getElementById('stime' + slotNum + '-value');
         if (timeValEl) {
-          // Show check-in time
-          timeValEl.textContent = formatDateTime(slotCheckInTimes[slotNum]);
-        }
-        
-        // Update duration display if it exists
-        const durationEl = document.getElementById('sduration' + slotNum);
-        if (durationEl) {
-          durationEl.textContent = calculateDuration(slotCheckInTimes[slotNum]);
+          timeValEl.textContent = formatDateTime(slotTimestamps[slotNum]);
         }
       }
     }

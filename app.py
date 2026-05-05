@@ -887,19 +887,20 @@ def update_slot_from_hardware():
 
         new_status = 'Occupied' if int(status) == 1 else 'Available'
         
-        # Parse timestamp - use client's local time if provided
+        # Parse timestamp - use client's local time if provided, same logic as toggle_slot
         try:
             if client_timestamp:
                 # Client sends ISO format with timezone info
                 client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
-                # Convert to UTC and format
-                now = client_dt.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                # Convert to naive datetime in client's timezone (remove timezone info)
+                # This preserves the local time the client sees
+                now = client_dt.replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
             else:
                 # Fallback to server time if no client timestamp
-                now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         except Exception as e:
-            print(f"Timestamp parse error: {e}, using server time")
-            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            print(f"[Hardware] Timestamp parse error: {e}, using server time")
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # 1. Get current slot status directly from Supabase
         get_resp = requests.get(
