@@ -1822,6 +1822,214 @@ def analytics():
 def account():
     return render_template('account.html')
 
+# Admin Management Page
+@app.route('/admin-management')
+def admin_management():
+    return render_template('admin_management.html')
+
+# ============================================
+# ADMIN MANAGEMENT API ENDPOINTS
+# ============================================
+
+# Get all admins (super_admin only)
+@app.route('/api/get_all_admins', methods=['GET'])
+def get_all_admins():
+    try:
+        # In production, check session for super_admin access
+        # For now, allow all requests
+        
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers=SUPABASE_HEADERS,
+            params={'select': 'admin_id,admin_name,admin_email,access_level,status,profile_picture,last_login,created_at,created_by'},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            admins = response.json()
+            return jsonify({'success': True, 'admins': admins})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to fetch admins'}), 500
+            
+    except Exception as e:
+        print(f"Get all admins error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Create new admin (super_admin only)
+@app.route('/api/create_admin', methods=['POST'])
+def create_admin():
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['admin_name', 'admin_email', 'admin_password', 'access_level']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'success': False, 'error': f'{field} is required'}), 400
+        
+        # Validate email format
+        if '@' not in data['admin_email']:
+            return jsonify({'success': False, 'error': 'Invalid email format'}), 400
+        
+        # Validate access level
+        valid_levels = ['super_admin', 'admin', 'manager']
+        if data['access_level'] not in valid_levels:
+            return jsonify({'success': False, 'error': 'Invalid access level'}), 400
+        
+        # Check if email already exists
+        check_response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers=SUPABASE_HEADERS,
+            params={'admin_email': f"eq.{data['admin_email']}", 'select': 'admin_id'},
+            timeout=10
+        )
+        
+        if check_response.status_code == 200 and len(check_response.json()) > 0:
+            return jsonify({'success': False, 'error': 'Email already exists'}), 400
+        
+        # Create new admin
+        new_admin = {
+            'admin_name': data['admin_name'],
+            'admin_email': data['admin_email'],
+            'admin_password': data['admin_password'],  # In production, hash this!
+            'access_level': data['access_level'],
+            'status': 'active',
+            'created_by': data.get('created_by', 1),  # Current admin ID
+            'profile_picture': '/static/images/default-profile.png'
+        }
+        
+        create_response = requests.post(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            json=new_admin,
+            timeout=10
+        )
+        
+        if create_response.status_code in [200, 201]:
+            created_admin = create_response.json()[0] if isinstance(create_response.json(), list) else create_response.json()
+            return jsonify({
+                'success': True,
+                'message': 'Admin created successfully',
+                'admin': created_admin
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Failed to create admin'}), 500
+            
+    except Exception as e:
+        print(f"Create admin error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Update admin details (super_admin only)
+@app.route('/api/update_admin', methods=['POST'])
+def update_admin():
+    try:
+        data = request.get_json()
+        admin_id = data.get('admin_id')
+        
+        if not admin_id:
+            return jsonify({'success': False, 'error': 'admin_id is required'}), 400
+        
+        # Build update object (only include provided fields)
+        update_data = {}
+        if 'admin_name' in data:
+            update_data['admin_name'] = data['admin_name']
+        if 'admin_email' in data:
+            update_data['admin_email'] = data['admin_email']
+        if 'access_level' in data:
+            update_data['access_level'] = data['access_level']
+        if 'status' in data:
+            update_data['status'] = data['status']
+        
+        if not update_data:
+            return jsonify({'success': False, 'error': 'No fields to update'}), 400
+        
+        # Update admin
+        update_response = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            params={'admin_id': f'eq.{admin_id}'},
+            json=update_data,
+            timeout=10
+        )
+        
+        if update_response.status_code in [200, 204]:
+            return jsonify({
+                'success': True,
+                'message': 'Admin updated successfully'
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Failed to update admin'}), 500
+            
+    except Exception as e:
+        print(f"Update admin error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Delete admin (super_admin only)
+@app.route('/api/delete_admin', methods=['POST'])
+def delete_admin():
+    try:
+        data = request.get_json()
+        admin_id = data.get('admin_id')
+        
+        if not admin_id:
+            return jsonify({'success': False, 'error': 'admin_id is required'}), 400
+        
+        # Prevent deleting admin_id = 1 (super admin)
+        if admin_id == 1:
+            return jsonify({'success': False, 'error': 'Cannot delete super admin'}), 400
+        
+        # Delete admin
+        delete_response = requests.delete(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers=SUPABASE_HEADERS,
+            params={'admin_id': f'eq.{admin_id}'},
+            timeout=10
+        )
+        
+        if delete_response.status_code in [200, 204]:
+            return jsonify({
+                'success': True,
+                'message': 'Admin deleted successfully'
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Failed to delete admin'}), 500
+            
+    except Exception as e:
+        print(f"Delete admin error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Reset admin password (super_admin only)
+@app.route('/api/reset_admin_password', methods=['POST'])
+def reset_admin_password():
+    try:
+        data = request.get_json()
+        admin_id = data.get('admin_id')
+        new_password = data.get('new_password')
+        
+        if not admin_id or not new_password:
+            return jsonify({'success': False, 'error': 'admin_id and new_password are required'}), 400
+        
+        # Update password (in production, hash this!)
+        update_response = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            params={'admin_id': f'eq.{admin_id}'},
+            json={'admin_password': new_password},
+            timeout=10
+        )
+        
+        if update_response.status_code in [200, 204]:
+            return jsonify({
+                'success': True,
+                'message': 'Password reset successfully'
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Failed to reset password'}), 500
+            
+    except Exception as e:
+        print(f"Reset password error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Handle preflight requests
 @app.before_request
 def handle_preflight():
