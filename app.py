@@ -1048,7 +1048,7 @@ def get_history_filtered():
     import os
     
     # Create a test file to confirm this code is running
-    test_file = os.path.join(os.path.dirname(os.path.abspath(_file_)), 'endpoint_called.txt')
+    test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'endpoint_called.txt')
     try:
         with open(test_file, 'a') as f:
             f.write("Endpoint called\n")

@@ -546,6 +546,16 @@
       return `${hourStr}:${mins}:${secs} ${ampm}`;
     }
 
+    function parseDateTime(dateStr) {
+      if (!dateStr) return null;
+      try {
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? null : date;
+      } catch (e) {
+        return null;
+      }
+    }
+
     // Update hardware status indicator
     function updateHardwareStatus() {
       const statusEl = document.getElementById('hardware-status');
