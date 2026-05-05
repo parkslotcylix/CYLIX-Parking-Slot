@@ -23,7 +23,7 @@ try:
 except:
     pass
 
-app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
+app = Flask(_name_, template_folder='templates', static_folder='static', static_url_path='/static')
 
 # Configuration - Supabase REST API (HTTP-based, works on any network)
 # Hardcoded defaults (will be overridden by environment variables if set)
@@ -880,27 +880,26 @@ def update_slot_from_hardware():
         data = request.get_json()
         slot_id = data.get('slot_id')
         status = data.get('status')  # 0 = Available, 1 = Occupied
-        client_timestamp = data.get('client_timestamp')  # Optional: client's local time
+        client_timestamp = data.get('client_timestamp')  # Optional: client's local timestamp
 
         if slot_id is None or status is None:
             return jsonify({'success': False, 'error': 'Missing slot_id or status'}), 400
 
         new_status = 'Occupied' if int(status) == 1 else 'Available'
         
-        # Parse timestamp - use client's local time if provided, otherwise use server time
+        # Parse timestamp - use client's local time if provided
         try:
             if client_timestamp:
                 # Client sends ISO format with timezone info
                 client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
-                # Convert to naive datetime in client's timezone (remove timezone info)
-                # This preserves the local time the client sees
-                now = client_dt.replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+                # Convert to UTC and format
+                now = client_dt.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
             else:
-                # Fallback to server time if no client timestamp provided
-                now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                # Fallback to server time if no client timestamp
+                now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         except Exception as e:
             print(f"Timestamp parse error: {e}, using server time")
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
         # 1. Get current slot status directly from Supabase
         get_resp = requests.get(
@@ -916,7 +915,7 @@ def update_slot_from_hardware():
 
         # 2. Only act if status actually changed
         if new_status == current_status:
-            return jsonify({'success': True, 'slot_id': slot_id, 'new_status': new_status, 'changed': False, 'timestamp': now})
+            return jsonify({'success': True, 'slot_id': slot_id, 'new_status': new_status, 'changed': False})
 
         if new_status == 'Occupied':
             patch_data = {'slot_status': 'Occupied', 'check_in_time': now, 'updated_at': now}
@@ -968,7 +967,7 @@ def update_slot_from_hardware():
                 )
 
         print(f"[Hardware] Slot {slot_id}: {current_status} → {new_status} at {now}")
-        return jsonify({'success': True, 'slot_id': slot_id, 'new_status': new_status, 'timestamp': now, 'changed': True})
+        return jsonify({'success': True, 'slot_id': slot_id, 'new_status': new_status, 'timestamp': now})
 
     except Exception as e:
         print(f"[Hardware] Error: {e}")
