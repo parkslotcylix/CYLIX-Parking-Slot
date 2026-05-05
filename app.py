@@ -1617,15 +1617,41 @@ def upload_profile_picture():
             )
             
             if upload_response.status_code not in [200, 201]:
-                print(f"Supabase storage upload failed: {upload_response.status_code} - {upload_response.text}")
-                return jsonify({'success': False, 'error': 'Failed to upload to storage'}), 500
+                error_detail = upload_response.text
+                print(f"Supabase storage upload failed: {upload_response.status_code} - {error_detail}")
+                
+                # Provide helpful error messages
+                if upload_response.status_code == 404:
+                    return jsonify({
+                        'success': False, 
+                        'error': 'Storage bucket "avatars" not found. Please create it in Supabase Dashboard.',
+                        'details': 'Go to Storage → Create bucket named "avatars" (public)'
+                    }), 500
+                elif upload_response.status_code == 403:
+                    return jsonify({
+                        'success': False, 
+                        'error': 'Permission denied. Please set storage policies in Supabase.',
+                        'details': 'Go to Storage → avatars → Policies and add the required policies'
+                    }), 500
+                else:
+                    return jsonify({
+                        'success': False, 
+                        'error': f'Storage upload failed: {error_detail}',
+                        'status_code': upload_response.status_code
+                    }), 500
             
             # Get public URL
             picture_url = f"{SUPABASE_URL}/storage/v1/object/public/avatars/{storage_path}"
             
         except Exception as storage_error:
             print(f"Storage error: {storage_error}")
-            return jsonify({'success': False, 'error': 'Storage upload failed'}), 500
+            import traceback
+            traceback.print_exc()
+            return jsonify({
+                'success': False, 
+                'error': f'Storage upload exception: {str(storage_error)}',
+                'hint': 'Check if Supabase Storage bucket "avatars" exists and is public'
+            }), 500
         
         # Update database with new picture URL
         try:
@@ -1679,6 +1705,60 @@ def get_admin():
             connection.close()
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# Test Supabase Storage connection
+@app.route('/api/test_storage', methods=['GET'])
+def test_storage():
+    """Test endpoint to verify Supabase Storage bucket exists and is accessible"""
+    try:
+        # Try to list objects in the avatars bucket
+        list_url = f"{SUPABASE_URL}/storage/v1/object/list/avatars"
+        
+        list_headers = {
+            'Authorization': f'Bearer {SUPABASE_API_KEY}',
+            'apikey': SUPABASE_API_KEY
+        }
+        
+        response = requests.post(
+            list_url,
+            headers=list_headers,
+            json={'limit': 1, 'offset': 0, 'sortBy': {'column': 'name', 'order': 'asc'}},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return jsonify({
+                'success': True,
+                'message': 'Supabase Storage bucket "avatars" is accessible',
+                'bucket_exists': True
+            })
+        elif response.status_code == 404:
+            return jsonify({
+                'success': False,
+                'message': 'Storage bucket "avatars" not found',
+                'bucket_exists': False,
+                'instructions': 'Create bucket in Supabase Dashboard: Storage → New bucket → Name: avatars (public)'
+            }), 404
+        elif response.status_code == 403:
+            return jsonify({
+                'success': False,
+                'message': 'Permission denied - storage policies not set',
+                'bucket_exists': True,
+                'instructions': 'Set storage policies in Supabase Dashboard: Storage → avatars → Policies'
+            }), 403
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Unexpected response: {response.status_code}',
+                'details': response.text
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Failed to connect to Supabase Storage'
+        }), 500
 
 @app.route('/api/update_admin_info', methods=['POST', 'OPTIONS'])
 def update_admin_info():
