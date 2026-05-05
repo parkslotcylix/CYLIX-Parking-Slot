@@ -886,9 +886,19 @@
           document.getElementById('admin-name').value = data.admin.admin_name || 'Administrator';
           document.getElementById('admin-email').value = data.admin.admin_email || 'admin@smartparking.com';
           
-          // Load profile picture only if it exists
+          // Load profile picture with error handling
           if (data.admin.profile_picture && data.admin.profile_picture !== '') {
-            document.getElementById('admin-profile-pic').src = data.admin.profile_picture;
+            const profileImg = document.getElementById('admin-profile-pic');
+            const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237FB77E' width='100' height='100'/%3E%3Ccircle cx='50' cy='35' r='20' fill='%23fff'/%3E%3Cpath d='M 15 75 Q 15 60 50 60 Q 85 60 85 75 L 85 100 L 15 100 Z' fill='%23fff'/%3E%3C/svg%3E";
+            
+            // Try to load the profile picture
+            profileImg.onerror = function() {
+              console.warn('Profile picture not found, using default avatar');
+              this.src = defaultAvatar;
+              this.onerror = null; // Prevent infinite loop
+            };
+            
+            profileImg.src = data.admin.profile_picture;
           }
           
           const levelText = data.admin.access_level === 'super_admin' ? 'Super Admin' : 
