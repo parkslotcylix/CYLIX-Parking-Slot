@@ -625,12 +625,16 @@ def toggle_slot():
         slot = get_resp.json()[0]
         current_status = slot['slot_status']
 
-        # Parse timestamp
+        # Parse timestamp - use client's local time as-is
         try:
-            client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+08:00'))
-            now = client_dt.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
-        except:
-            now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            # Client sends ISO format with timezone info
+            client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+00:00'))
+            # Convert to naive datetime in client's timezone (remove timezone info)
+            # This preserves the local time the client sees
+            now = client_dt.replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            print(f"Timestamp parse error: {e}, using server time")
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if current_status == 'Available':
             new_status = 'Occupied'
@@ -693,115 +697,6 @@ def toggle_slot():
 
         return jsonify({'success': True, 'new_status': new_status, 'timestamp': now})
 
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-    try:
-        data = request.get_json()
-        slot_id = data.get('slot_id')
-        client_timestamp = data.get('client_timestamp')  # Get client-provided timestamp
-        
-        connection = get_db_connection()
-        if connection is None:
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
-        
-        try:
-            cursor = get_db_cursor(connection)
-            
-            # Get current slot status
-            cursor.execute(
-                "SELECT slot_status, check_in_time FROM parking_slots WHERE slot_id = %s",
-                (slot_id,)
-            )
-            slot = cursor.fetchone()
-            
-            if slot:
-                current_status = slot['slot_status']
-                
-                # Use client timestamp if provided, otherwise fall back to server time
-                if client_timestamp:
-                    try:
-                        # Parse client timestamp (ISO format from JavaScript)
-                        client_dt = datetime.fromisoformat(client_timestamp.replace('Z', '+08:00'))
-                        now = client_dt.strftime('%Y-%m-%d %H:%M:%S')
-                    except:
-                        # Fallback to server time if parsing fails
-                        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                else:
-                    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                
-                if current_status == 'Available':
-                    # Transitioning to Occupied
-                    new_status = 'Occupied'
-                    check_in_time = now
-                    
-                    # 1. Update parking_slots
-                    cursor.execute(
-                        "UPDATE parking_slots SET slot_status = %s, check_in_time = %s, updated_at = %s WHERE slot_id = %s",
-                        (new_status, check_in_time, now, slot_id)
-                    )
-                    
-                    # 2. Create parking_history record
-                    cursor.execute(
-                        """INSERT INTO parking_history (slot_id, check_in_time, status, created_at) 
-                           VALUES (%s, %s, %s, %s)""",
-                        (slot_id, check_in_time, 'active', now)
-                    )
-                else:
-                    # Transitioning to Available
-                    new_status = 'Available'
-                    check_out_time = now
-                    
-                    # 1. Update parking_slots
-                    cursor.execute(
-                        "UPDATE parking_slots SET slot_status = %s, check_out_time = %s, updated_at = %s WHERE slot_id = %s",
-                        (new_status, check_out_time, now, slot_id)
-                    )
-                    
-                    # 2. Get active history record and update it
-                    cursor.execute(
-                        """SELECT history_id, check_in_time FROM parking_history 
-                           WHERE slot_id = %s AND status = 'active' 
-                           ORDER BY history_id DESC LIMIT 1""",
-                        (slot_id,)
-                    )
-                    history = cursor.fetchone()
-                    
-                    if history:
-                        try:
-                            check_in = datetime.strptime(history['check_in_time'], '%Y-%m-%d %H:%M:%S')
-                            check_out = datetime.strptime(check_out_time, '%Y-%m-%d %H:%M:%S')
-                            duration_hours = (check_out - check_in).total_seconds() / 3600
-                        except:
-                            duration_hours = 0
-                        
-                        cursor.execute(
-                            """UPDATE parking_history 
-                               SET check_out_time = %s, status = %s, duration_hours = %s
-                               WHERE history_id = %s""",
-                            (check_out_time, 'completed', duration_hours, history['history_id'])
-                        )
-                
-                connection.commit()
-                
-                # Log the action
-                cursor.execute(
-                    "INSERT INTO admin_logs (admin_id, action, slot_id, description) VALUES (%s, %s, %s, %s)",
-                    (1, 'toggle_slot', slot_id, f'Status changed to {new_status}')
-                )
-                connection.commit()
-                cursor.close()
-                
-                return jsonify({
-                    'success': True,
-                    'new_status': new_status,
-                    'timestamp': now
-                })
-            else:
-                cursor.close()
-                return jsonify({'success': False, 'error': 'Slot not found'}), 404
-        finally:
-            connection.close()
-            
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
