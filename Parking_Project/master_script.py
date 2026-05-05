@@ -41,23 +41,15 @@ while empty_reference is None:
 print("Running Detection...")
 
 def send_slot_to_backend(slot_id, status):
-    """Send slot status to Flask backend API with client timestamp"""
+    """Send slot status to Flask backend API"""
     try:
-        from datetime import datetime
-        # Send current client timestamp with the request
-        client_timestamp = datetime.now().isoformat()
-        
         response = requests.post(
             FLASK_API,
-            json={
-                'slot_id': slot_id, 
-                'status': status,
-                'client_timestamp': client_timestamp  # Add client timestamp
-            },
+            json={'slot_id': slot_id, 'status': status},
             timeout=5  # Increased timeout from 2 to 5 seconds
         )
         if response.status_code == 200:
-            print(f"✓ Slot {slot_id} updated to backend: {status} at {client_timestamp}")
+            print(f"✓ Slot {slot_id} updated to backend: {status}")
         else:
             print(f"✗ Backend error for Slot {slot_id}: {response.status_code}")
     except requests.exceptions.Timeout:
@@ -74,9 +66,29 @@ print("Waiting for empty reference calibration...")
 print("Running Detection...")
 
 frame_count = 0
+frame_skip_counter = 0
+MAX_RETRIES = 3
+retry_count = 0
+
 while True:
     ret, frame = cap.read()
-    if not ret: continue
+    
+    # Handle stream errors - reconnect if needed
+    if not ret:
+        print(f"⚠ Stream error, attempting reconnect ({retry_count + 1}/{MAX_RETRIES})...")
+        cap.release()
+        time.sleep(1)  # Wait before reconnecting
+        cap = cv2.VideoCapture(CAM_URL)
+        retry_count += 1
+        
+        if retry_count >= MAX_RETRIES:
+            print("✗ Max retries reached. Restarting stream...")
+            retry_count = 0
+            time.sleep(2)
+        continue
+    
+    # Reset retry counter on successful frame
+    retry_count = 0
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (21, 21), 0)
