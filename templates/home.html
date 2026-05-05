@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Smart Parking Slot - Home</title>
+  <link rel="icon" type="image/png" href="/static/images/logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/profile_dropdown.css">
   <style>
     :root {
       --green-dark: #1a4731;
@@ -529,8 +531,42 @@
     <li><a href="/home" class="active">Home</a></li>
     <li><a href="/analytics">Report</a></li>
     <li><a href="/parking">Parking</a></li>
-    <li><a href="/account">Account</a></li>
-    <li style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px;"><a href="#" onclick="handleLogout(event)" style="color: #ff9999;">🔒 Logout</a></li>
+    <li><a href="/admin-management">Admin Management</a></li>
+    <li class="profile-dropdown">
+      <div class="profile-trigger" id="profileTrigger">
+        <div class="profile-avatar-container">
+          <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile">
+          <div class="profile-initials" id="profileInitials">A</div>
+        </div>
+        <span class="profile-name" id="profileName">Admin User</span>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-header">
+          <div class="dropdown-admin-name" id="dropdownAdminName">Admin User</div>
+          <div class="dropdown-admin-email" id="dropdownAdminEmail">admin@example.com</div>
+          <div class="dropdown-badges">
+            <span id="dropdownRoleBadge"></span>
+            <span id="dropdownStatusBadge"></span>
+          </div>
+        </div>
+        <div class="dropdown-body">
+          <a href="/account" class="dropdown-item">
+            <span>👤</span>
+            <span>My Account</span>
+          </a>
+          <a href="/account" class="dropdown-item">
+            <span>⚙️</span>
+            <span>Account Settings</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" onclick="handleLogout(event)" class="dropdown-item logout">
+            <span>🚪</span>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </li>
   </ul>
 </nav>
 
@@ -676,55 +712,13 @@
 
   // Load dashboard on page load
   document.addEventListener('DOMContentLoaded', () => {
-    // Check authentication
-    checkAuthentication();
     updateDashboard();
   });
   
   // Refresh every 5 seconds
   setInterval(updateDashboard, 5000);
 
-  // Authentication check
-  function checkAuthentication() {
-    const userEmail = sessionStorage.getItem('user_email');
-    if (!userEmail) {
-      // Not logged in, redirect to login
-      window.location.href = '/';
-    }
-  }
-
-  // Handle logout
-  async function handleLogout(event) {
-    event.preventDefault();
-    if (confirm('Are you sure you want to logout?')) {
-      try {
-        // Call backend logout endpoint to clear server-side session
-        const response = await fetch(`${API_BASE}/api/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        });
-        
-        // Clear client-side storage regardless of backend response
-        sessionStorage.removeItem('user_email');
-        sessionStorage.removeItem('user_id');
-        sessionStorage.removeItem('access_level');
-        
-        // Redirect to home page
-        window.location.href = '/';
-      } catch (error) {
-        console.error('Logout error:', error);
-        // Still clear client-side and redirect even if backend fails
-        sessionStorage.removeItem('user_email');
-        sessionStorage.removeItem('user_id');
-        sessionStorage.removeItem('access_level');
-        window.location.href = '/';
-      }
-    }
-  }
-
 </script>
+<script src="/static/js/profile_dropdown.js"></script>
 </body>
 </html>

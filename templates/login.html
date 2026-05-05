@@ -916,6 +916,8 @@
         sessionStorage.setItem('user_id', data.admin_id || 1);
         sessionStorage.setItem('user_name', data.admin_name || 'Administrator');
         sessionStorage.setItem('access_level', data.access_level || 'admin');
+        sessionStorage.setItem('status', data.status || 'active');
+        sessionStorage.setItem('profile_picture', data.profile_picture || '/static/images/default-profile.png');
         
         showSuccess('Authentication successful! Redirecting to dashboard...');
         

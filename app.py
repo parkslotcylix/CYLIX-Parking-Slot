@@ -568,6 +568,7 @@ def login():
             session['user_name'] = admin['admin_name']
             session['access_level'] = admin['access_level']
             session['status'] = admin.get('status', 'active')
+            session['profile_picture'] = admin.get('profile_picture', '/static/images/default-profile.png')
 
             return jsonify({
                 'success': True,
@@ -576,7 +577,8 @@ def login():
                 'admin_name': admin['admin_name'],
                 'admin_email': admin['admin_email'],
                 'access_level': admin['access_level'],
-                'status': admin.get('status', 'active')
+                'status': admin.get('status', 'active'),
+                'profile_picture': admin.get('profile_picture', '/static/images/default-profile.png')
             })
 
         return jsonify({'success': False, 'error': 'Invalid email or password'}), 401
@@ -1746,7 +1748,8 @@ def check_session():
             'user_name': session.get('user_name'),
             'user_email': session.get('user_email'),
             'access_level': session.get('access_level'),
-            'status': session.get('status', 'active')
+            'status': session.get('status', 'active'),
+            'profile_picture': session.get('profile_picture', '/static/images/default-profile.png')
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

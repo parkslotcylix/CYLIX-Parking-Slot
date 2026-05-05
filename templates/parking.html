@@ -9,6 +9,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/profile_dropdown.css">
   <style>
     :root {
       --green-dark: #1a4731;
@@ -402,9 +403,40 @@
       <li><a href="/analytics">Report</a></li>
       <li><a href="/parking" class="active">Parking</a></li>
       <li><a href="/admin-management">Admin Management</a></li>
-      <li><a href="/account">Account</a></li>
-      <li style="margin-left: 20px; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 20px;">
-        <a href="#" onclick="handleLogout(event)" style="color: #ff9999;">🔒 Logout</a>
+      <li class="profile-dropdown">
+        <div class="profile-trigger" id="profileTrigger">
+          <div class="profile-avatar-container">
+            <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile">
+            <div class="profile-initials" id="profileInitials">A</div>
+          </div>
+          <span class="profile-name" id="profileName">Admin User</span>
+          <span class="dropdown-arrow">▼</span>
+        </div>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <div class="dropdown-header">
+            <div class="dropdown-admin-name" id="dropdownAdminName">Admin User</div>
+            <div class="dropdown-admin-email" id="dropdownAdminEmail">admin@example.com</div>
+            <div class="dropdown-badges">
+              <span id="dropdownRoleBadge"></span>
+              <span id="dropdownStatusBadge"></span>
+            </div>
+          </div>
+          <div class="dropdown-body">
+            <a href="/account" class="dropdown-item">
+              <span>👤</span>
+              <span>My Account</span>
+            </a>
+            <a href="/account" class="dropdown-item">
+              <span>⚙️</span>
+              <span>Account Settings</span>
+            </a>
+            <div class="dropdown-divider"></div>
+            <a href="#" onclick="handleLogout(event)" class="dropdown-item logout">
+              <span>🚪</span>
+              <span>Logout</span>
+            </a>
+          </div>
+        </div>
       </li>
     </ul>
   </nav>
@@ -893,7 +925,6 @@
 
     // ── Boot ──
     document.addEventListener('DOMContentLoaded', () => {
-      checkAuthentication();
       loadTimestampsFromStorage();
       loadParkingSlots();   // immediate first load
       schedulePoll();       // start safe polling loop
@@ -909,8 +940,8 @@
     setInterval(updateCurrentTime, 1000);
   </script>
 
-  <!-- Auth Check Script -->
-  <script src="/static/js/auth_check.js"></script>
+  <!-- Profile Dropdown Script -->
+  <script src="/static/js/profile_dropdown.js"></script>
 
 </body>
 
