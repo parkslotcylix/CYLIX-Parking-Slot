@@ -6,7 +6,7 @@
 nav {
   background: #1F2B26 !important;
   padding: 0 48px !important;
-  height: 72px !important; /* Slightly taller for better proportion */
+  height: 72px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -14,6 +14,7 @@ nav {
   top: 0 !important;
   z-index: 1000 !important;
   box-shadow: 0 3px 15px rgba(0,0,0,0.25) !important;
+  position: relative !important;
 }
 
 /* Logo Section */
@@ -27,6 +28,7 @@ nav {
   color: white !important;
   text-decoration: none !important;
   flex-shrink: 0 !important;
+  z-index: 20 !important;
 }
 
 .nav-logo-icon {
@@ -47,7 +49,7 @@ nav {
   object-fit: cover !important;
 }
 
-/* Navigation Links */
+/* Navigation Links Container - Centered */
 .nav-links {
   display: flex !important;
   align-items: center !important;
@@ -55,10 +57,24 @@ nav {
   list-style: none !important;
   margin: 0 !important;
   padding: 0 !important;
-  flex: 1 !important;
-  justify-content: center !important;
-  margin-left: 60px !important; /* Space from logo */
-  margin-right: 60px !important; /* Space from profile */
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 10 !important;
+}
+
+/* Only center the main navigation items, not the profile dropdown */
+.nav-links li:not(.profile-dropdown) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Profile dropdown positioning - move to right side of navbar */
+.nav-links .profile-dropdown {
+  position: fixed !important;
+  right: 48px !important;
+  top: 18px !important; /* Adjust based on navbar height */
+  z-index: 1001 !important;
 }
 
 .nav-links li {
@@ -184,8 +200,10 @@ nav .profile-trigger:hover .dropdown-arrow {
 @media (max-width: 1200px) {
   .nav-links {
     gap: 32px !important;
-    margin-left: 40px !important;
-    margin-right: 40px !important;
+  }
+  
+  .nav-links .profile-dropdown {
+    right: 32px !important;
   }
 }
 
@@ -196,13 +214,15 @@ nav .profile-trigger:hover .dropdown-arrow {
   
   .nav-links {
     gap: 24px !important;
-    margin-left: 20px !important;
-    margin-right: 20px !important;
   }
   
   .nav-links a {
     font-size: 0.85rem !important;
     padding: 6px 12px !important;
+  }
+  
+  .nav-links .profile-dropdown {
+    right: 32px !important;
   }
 }
 
@@ -218,13 +238,16 @@ nav .profile-trigger:hover .dropdown-arrow {
   
   .nav-links {
     gap: 16px !important;
-    margin-left: 16px !important;
-    margin-right: 16px !important;
   }
   
   .nav-links a {
     font-size: 0.8rem !important;
     padding: 4px 8px !important;
+  }
+  
+  .nav-links .profile-dropdown {
+    right: 20px !important;
+    top: 16px !important;
   }
   
   nav .profile-trigger {
@@ -244,13 +267,15 @@ nav .profile-trigger:hover .dropdown-arrow {
   
   .nav-links {
     gap: 12px !important;
-    margin-left: 8px !important;
-    margin-right: 8px !important;
   }
   
   .nav-links a {
     font-size: 0.75rem !important;
     padding: 4px 6px !important;
+  }
+  
+  .nav-links .profile-dropdown {
+    right: 16px !important;
   }
   
   nav .profile-trigger {
