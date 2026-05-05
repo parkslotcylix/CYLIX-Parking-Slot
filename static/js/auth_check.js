@@ -10,6 +10,9 @@ async function checkSessionAndUpdateNav() {
         const data = await response.json();
         
         if (data.logged_in) {
+            // Update profile display in navigation
+            updateProfileDisplay(data);
+            
             // Hide Admin Management link if not super admin
             const adminManagementLinks = document.querySelectorAll('a[href="/admin-management"]');
             adminManagementLinks.forEach(link => {
@@ -40,6 +43,57 @@ async function checkSessionAndUpdateNav() {
         adminManagementLinks.forEach(link => {
             link.parentElement.style.display = 'none';
         });
+    }
+}
+
+// Update profile display in navigation
+async function updateProfileDisplay(sessionData) {
+    try {
+        // Get admin details including profile picture
+        const response = await fetch(`${API_BASE}/get_admin`);
+        const data = await response.json();
+        
+        if (data.success && data.admin) {
+            const admin = data.admin;
+            const profilePicture = admin.profile_picture || '/static/images/default-profile.png';
+            const adminName = sessionData.user_name || admin.admin_name || 'Admin';
+            
+            // Find all account links and replace with profile display
+            const accountLinks = document.querySelectorAll('a[href="/account"]');
+            accountLinks.forEach(link => {
+                // Create profile display
+                const profileHTML = `
+                    <a href="/account" class="nav-profile-link" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: rgba(255,255,255,0.8); transition: color 0.2s;">
+                        <img src="${profilePicture}" 
+                             alt="${adminName}" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect fill=\\'%237FB77E\\' width=\\'100\\' height=\\'100\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'35\\' r=\\'20\\' fill=\\'%23fff\\'/%3E%3Cpath d=\\'M 15 75 Q 15 60 50 60 Q 85 60 85 75 L 85 100 L 15 100 Z\\' fill=\\'%23fff\\'/%3E%3C/svg%3E'"
+                             style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.3); transition: border-color 0.2s;" />
+                        <span style="font-weight: 700; font-size: 0.88rem; letter-spacing: 0.06em; text-transform: uppercase;">${adminName}</span>
+                    </a>
+                `;
+                
+                link.outerHTML = profileHTML;
+            });
+            
+            // Add hover effect for profile links
+            setTimeout(() => {
+                const profileLinks = document.querySelectorAll('.nav-profile-link');
+                profileLinks.forEach(profileLink => {
+                    profileLink.addEventListener('mouseenter', function() {
+                        this.style.color = '#f5c842';
+                        const img = this.querySelector('img');
+                        if (img) img.style.borderColor = '#f5c842';
+                    });
+                    profileLink.addEventListener('mouseleave', function() {
+                        this.style.color = 'rgba(255,255,255,0.8)';
+                        const img = this.querySelector('img');
+                        if (img) img.style.borderColor = 'rgba(255,255,255,0.3)';
+                    });
+                });
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Profile display error:', error);
     }
 }
 
