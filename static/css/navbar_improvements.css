@@ -1,0 +1,289 @@
+/**
+ * Navbar Improvements - Better alignment and presentation
+ */
+
+/* Enhanced Navbar Styling */
+nav {
+  background: #1F2B26 !important;
+  padding: 0 48px !important;
+  height: 72px !important; /* Slightly taller for better proportion */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 3px 15px rgba(0,0,0,0.25) !important;
+}
+
+/* Logo Section */
+.nav-logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.3rem !important;
+  color: white !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
+}
+
+.nav-logo-icon {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.nav-logo-icon img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Navigation Links */
+.nav-links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 40px !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 1 !important;
+  justify-content: center !important;
+  margin-left: 60px !important; /* Space from logo */
+  margin-right: 60px !important; /* Space from profile */
+}
+
+.nav-links li {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.nav-links a {
+  color: rgba(255,255,255,0.85) !important;
+  text-decoration: none !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+  position: relative !important;
+  display: inline-block !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  white-space: nowrap !important;
+}
+
+.nav-links a::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -2px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 0 !important;
+  height: 3px !important;
+  background: #F7C85C !important;
+  border-radius: 2px !important;
+  transition: width 0.3s ease !important;
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 80% !important;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Profile Dropdown Alignment */
+.nav-links .profile-dropdown {
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Enhanced Profile Trigger for Navbar */
+nav .profile-trigger {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 8px 16px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-radius: 25px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  min-height: 48px !important;
+  min-width: 160px !important;
+}
+
+nav .profile-trigger:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Profile Avatar in Navbar */
+nav .profile-avatar-container {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  flex-shrink: 0 !important;
+}
+
+nav .profile-initials {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: white !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+nav .profile-name {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: white !important;
+  max-width: 100px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+}
+
+nav .dropdown-arrow {
+  font-size: 10px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  transition: transform 0.3s ease !important;
+  flex-shrink: 0 !important;
+}
+
+nav .profile-trigger:hover .dropdown-arrow {
+  transform: translateY(2px) !important;
+  color: white !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .nav-links {
+    gap: 32px !important;
+    margin-left: 40px !important;
+    margin-right: 40px !important;
+  }
+}
+
+@media (max-width: 992px) {
+  nav {
+    padding: 0 32px !important;
+  }
+  
+  .nav-links {
+    gap: 24px !important;
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+  }
+  
+  .nav-links a {
+    font-size: 0.85rem !important;
+    padding: 6px 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  nav {
+    padding: 0 20px !important;
+    height: 64px !important;
+  }
+  
+  .nav-logo {
+    font-size: 1.1rem !important;
+  }
+  
+  .nav-links {
+    gap: 16px !important;
+    margin-left: 16px !important;
+    margin-right: 16px !important;
+  }
+  
+  .nav-links a {
+    font-size: 0.8rem !important;
+    padding: 4px 8px !important;
+  }
+  
+  nav .profile-trigger {
+    min-width: 120px !important;
+    padding: 6px 12px !important;
+  }
+  
+  nav .profile-name {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  nav {
+    padding: 0 16px !important;
+  }
+  
+  .nav-links {
+    gap: 12px !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+  }
+  
+  .nav-links a {
+    font-size: 0.75rem !important;
+    padding: 4px 6px !important;
+  }
+  
+  nav .profile-trigger {
+    min-width: auto !important;
+    padding: 4px 8px !important;
+  }
+}
+
+/* Fix for any layout issues */
+nav * {
+  box-sizing: border-box !important;
+}
+
+/* Ensure proper vertical alignment */
+nav .nav-links,
+nav .nav-links li,
+nav .profile-dropdown {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Better spacing for the entire navbar */
+nav {
+  min-height: 72px !important;
+}
+
+/* Logo hover effect */
+.nav-logo:hover {
+  transform: translateY(-1px) !important;
+  transition: transform 0.2s ease !important;
+}
+
+.nav-logo:hover .nav-logo-icon {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
