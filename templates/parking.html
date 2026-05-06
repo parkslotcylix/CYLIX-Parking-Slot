@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Parking Slot - Parking</title>
-  <link rel="icon" type="image/png" href="/static/images/logo.png" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="/static/css/profile_dropdown.css">
-  <link rel="stylesheet" href="/static/css/navbar_redesign.css">
+{% block title %}Smart Parking Slot - Parking{% endblock %}
+
+{% block extra_css %}
   <style>
     :root {
       --green-dark: #1a4731;
@@ -389,58 +381,9 @@
       .pf-stat-label { font-size: 0.7rem; }
     }
   </style>
-</head>
+{% endblock %}
 
-<body>
-
-  <!-- NAVBAR -->
-  <nav>
-    <a class="nav-logo" href="/home" style="cursor:pointer; text-decoration:none;">
-      <div class="nav-logo-icon"><img src="/static/images/logo.png" alt="ParkSlot Logo" /></div>
-      ParkSlot
-    </a>
-    <ul class="nav-links">
-      <li><a href="/home">Home</a></li>
-      <li><a href="/analytics">Report</a></li>
-      <li><a href="/parking" class="active">Parking</a></li>
-      <li><a href="/admin-management">Admin Management</a></li>
-      <li class="profile-dropdown">
-        <div class="profile-trigger" id="profileTrigger">
-          <div class="profile-avatar-container">
-            <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile">
-            <div class="profile-initials" id="profileInitials">A</div>
-          </div>
-          <span class="profile-name" id="profileName">Admin User</span>
-          <span class="dropdown-arrow">▼</span>
-        </div>
-        <div class="dropdown-menu" id="dropdownMenu">
-          <div class="dropdown-header">
-            <div class="dropdown-admin-name" id="dropdownAdminName">Admin User</div>
-            <div class="dropdown-admin-email" id="dropdownAdminEmail">admin@example.com</div>
-            <div class="dropdown-badges">
-              <span id="dropdownRoleBadge"></span>
-              <span id="dropdownStatusBadge"></span>
-            </div>
-          </div>
-          <div class="dropdown-body">
-            <a href="/account" class="dropdown-item">
-              <span>👤</span>
-              <span>My Account</span>
-            </a>
-            <a href="/account" class="dropdown-item">
-              <span>⚙️</span>
-              <span>Account Settings</span>
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="#" onclick="handleLogout(event)" class="dropdown-item logout">
-              <span>🚪</span>
-              <span>Logout</span>
-            </a>
-          </div>
-        </div>
-      </li>
-    </ul>
-  </nav>
+{% block content %}
 
   <!-- ========== PARKING ========== -->
   <section id="page-parking">
@@ -524,8 +467,9 @@
       </div>
     </div>
   </section>
+{% endblock %}
 
-  <script>
+{% block extra_js %}
     const API_BASE = '/api';
     const slotTimestamps = {};
     const STORAGE_KEY = 'parkslot_timestamps';
@@ -940,10 +884,4 @@
     // Clock tick every second
     setInterval(updateCurrentTime, 1000);
   </script>
-
-  <!-- Profile Dropdown Script -->
-  <script src="/static/js/profile_dropdown.js"></script>
-
-</body>
-
-</html>
+{% endblock %}

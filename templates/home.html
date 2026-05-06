@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Smart Parking Slot - Home</title>
-  <link rel="icon" type="image/png" href="/static/images/logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/static/css/profile_dropdown.css">
-  <link rel="stylesheet" href="/static/css/navbar_redesign.css">
+{% extends "base.html" %}
+
+{% block title %}Smart Parking Slot - Home{% endblock %}
+
+{% block extra_css %}
   <style>
     :root {
       --green-dark: #1a4731;
@@ -519,102 +514,9 @@
       .dash-footer-free { font-size: 0.8rem; }
     }
   </style>
-</head>
-<body>
+{% endblock %}
 
-<!-- NAVBAR -->
-<nav class="navbar">
-  <!-- Logo/Brand -->
-  <a href="/home" class="navbar-brand">
-    <div class="navbar-logo">
-      <img src="/static/images/logo.png" alt="ParkSlot Logo"/>
-    </div>
-    ParkSlot
-  </a>
-
-  <!-- Mobile Hamburger Toggle -->
-  <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-
-  <!-- Right Side: Navigation + Profile -->
-  <div class="navbar-right">
-    <!-- Navigation Links -->
-    <ul class="navbar-nav">
-      <li><a href="/home" class="active">Home</a></li>
-      <li><a href="/analytics">Report</a></li>
-      <li><a href="/parking">Parking</a></li>
-      <li><a href="/admin-management">Admin Management</a></li>
-    </ul>
-
-    <!-- Profile Dropdown -->
-    <div class="navbar-profile">
-      <div class="profile-trigger" id="profileTrigger">
-        <div class="profile-avatar-container">
-          <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile">
-          <div class="profile-initials" id="profileInitials">A</div>
-        </div>
-        <span class="profile-name" id="profileName">Admin User</span>
-        <span class="dropdown-arrow">▼</span>
-      </div>
-      <div class="dropdown-menu" id="dropdownMenu">
-        <div class="dropdown-header">
-          <div class="dropdown-admin-name" id="dropdownAdminName">Admin User</div>
-          <div class="dropdown-admin-email" id="dropdownAdminEmail">admin@example.com</div>
-          <div class="dropdown-badges">
-            <span id="dropdownRoleBadge"></span>
-            <span id="dropdownStatusBadge"></span>
-          </div>
-        </div>
-        <div class="dropdown-body">
-          <a href="/account" class="dropdown-item">
-            <span>👤</span>
-            <span>My Account</span>
-          </a>
-          <a href="/account" class="dropdown-item">
-            <span>⚙️</span>
-            <span>Account Settings</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" onclick="handleLogout(event)" class="dropdown-item logout">
-            <span>🚪</span>
-            <span>Logout</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile Menu -->
-  <div class="navbar-mobile-menu" id="navbarMobileMenu">
-    <!-- Mobile Navigation Links -->
-    <ul class="mobile-nav-links">
-      <li><a href="/home" class="active">Home</a></li>
-      <li><a href="/analytics">Report</a></li>
-      <li><a href="/parking">Parking</a></li>
-      <li><a href="/admin-management">Admin Management</a></li>
-    </ul>
-
-    <!-- Mobile Profile Section -->
-    <div class="mobile-profile-section">
-      <div class="mobile-profile-info">
-        <div class="mobile-profile-avatar" id="mobileProfileAvatar">A</div>
-        <div class="mobile-profile-name" id="mobileProfileName">Admin User</div>
-        <div class="mobile-profile-email" id="mobileProfileEmail">admin@example.com</div>
-        <div class="mobile-profile-badges" id="mobileProfileBadges">
-          <!-- Badges will be populated by JavaScript -->
-        </div>
-      </div>
-      <div class="mobile-profile-actions">
-        <a href="/account" class="mobile-profile-btn primary">👤 My Account</a>
-        <a href="/account" class="mobile-profile-btn primary">⚙️ Account Settings</a>
-        <a href="#" onclick="handleLogout(event)" class="mobile-profile-btn danger">🚪 Logout</a>
-      </div>
-    </div>
-  </div>
-</nav>
+{% block content %}
 
 <!-- ========== HOME ========== -->
 <section id="page-home">
@@ -718,7 +620,9 @@
     </div>
   </div>
 </section>
+{% endblock %}
 
+{% block extra_js %}
 <script>
   const API_BASE = '/api';
 
@@ -763,9 +667,5 @@
   
   // Refresh every 5 seconds
   setInterval(updateDashboard, 5000);
-
 </script>
-<script src="/static/js/profile_dropdown.js"></script>
-<script src="/static/js/navbar_mobile.js"></script>
-</body>
-</html>
+{% endblock %}

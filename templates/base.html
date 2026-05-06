@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Smart Parking Slot{% endblock %}</title>
+  <link rel="icon" type="image/png" href="/static/images/logo.png" />
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  
+  <!-- Core Navbar Styles -->
+  <link rel="stylesheet" href="/static/css/profile_dropdown.css">
+  <link rel="stylesheet" href="/static/css/navbar_professional.css">
+  
+  <!-- Page-specific styles -->
+  {% block extra_css %}{% endblock %}
+  
+  <!-- Page-specific head content -->
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <!-- Include Shared Navbar -->
+  {% include 'includes/navbar.html' %}
+  
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  
+  <!-- Core JavaScript -->
+  <script src="/static/js/profile_dropdown.js"></script>
+  <script src="/static/js/navbar_mobile.js"></script>
+  
+  <!-- Page-specific JavaScript -->
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,500 @@
+/**
+ * Professional SaaS Dashboard Navbar
+ * Clean, minimal, properly grouped layout
+ */
+
+/* Reset and Base */
+* {
+  box-sizing: border-box;
+}
+
+/* Main Navbar - Slimmer Professional Height */
+.navbar {
+  background: #1F2B26;
+  padding: 0 1.5rem;
+  height: 56px; /* Reduced from 70px for slimmer look */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Left Section: Logo + Navigation Grouped Together */
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem; /* Space between logo and nav links */
+}
+
+/* Logo - Compact and Clean */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.navbar-brand:hover {
+  color: white;
+  text-decoration: none;
+}
+
+.navbar-logo {
+  width: 32px; /* Reduced from 40px */
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.navbar-logo:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.navbar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Navigation Links - Tightly Grouped */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* Tight spacing between links */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-nav li {
+  margin: 0;
+}
+
+.navbar-nav a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem; /* Compact padding */
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+  white-space: nowrap;
+  text-transform: none; /* Remove uppercase for cleaner look */
+  letter-spacing: normal;
+}
+
+.navbar-nav a:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+
+.navbar-nav a.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Subtle underline for active state */
+.navbar-nav a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0.75rem;
+  right: 0.75rem;
+  height: 2px;
+  background: #F7C85C;
+  border-radius: 1px;
+}
+
+/* Right Section: Profile Only */
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Profile Section - Compact and Professional */
+.navbar-profile {
+  position: relative;
+}
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem; /* Much more compact */
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px; /* Smaller radius */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 36px; /* Reduced height */
+}
+
+.profile-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Profile Avatar - Smaller */
+.profile-avatar-container {
+  width: 28px; /* Reduced from 32px */
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Profile Name - Compact */
+.profile-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dropdown Arrow - Subtle */
+.dropdown-arrow {
+  font-size: 0.625rem;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.profile-trigger:hover .dropdown-arrow {
+  transform: translateY(1px);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Mobile Hamburger - Compact */
+.navbar-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 24px; /* Smaller */
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+.navbar-toggle span {
+  width: 100%;
+  height: 2px;
+  background: white;
+  border-radius: 1px;
+  transition: all 0.2s ease;
+  transform-origin: center;
+}
+
+.navbar-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.navbar-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
+/* Mobile Menu - Improved */
+.navbar-mobile-menu {
+  position: fixed;
+  top: 56px; /* Match navbar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(31, 43, 38, 0.98);
+  backdrop-filter: blur(10px);
+  display: none;
+  flex-direction: column;
+  padding: 1.5rem;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.navbar-mobile-menu.active {
+  display: flex;
+}
+
+.mobile-nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobile-nav-links a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.mobile-nav-links a:hover,
+.mobile-nav-links a.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #F7C85C;
+  text-decoration: none;
+}
+
+/* Mobile Profile Section */
+.mobile-profile-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mobile-profile-info {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.mobile-profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin: 0 auto 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-profile-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-profile-email {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.75rem;
+}
+
+.mobile-profile-badges {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mobile-profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobile-profile-btn {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+}
+
+.mobile-profile-btn.primary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.mobile-profile-btn.primary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  text-decoration: none;
+  color: white;
+}
+
+.mobile-profile-btn.danger {
+  background: rgba(244, 67, 54, 0.15);
+  color: #ff6b6b;
+  border-color: rgba(244, 67, 54, 0.2);
+}
+
+.mobile-profile-btn.danger:hover {
+  background: rgba(244, 67, 54, 0.25);
+  text-decoration: none;
+  color: #ff5252;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 992px) {
+  .navbar {
+    padding: 0 1rem;
+  }
+  
+  .navbar-left {
+    gap: 1.5rem;
+  }
+  
+  .navbar-nav {
+    gap: 0.125rem;
+  }
+  
+  .navbar-nav a {
+    font-size: 0.8125rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 1rem;
+    height: 52px; /* Even slimmer on mobile */
+  }
+  
+  .navbar-brand {
+    font-size: 1rem;
+  }
+  
+  .navbar-logo {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .navbar-toggle {
+    display: flex;
+  }
+  
+  .navbar-left .navbar-nav {
+    display: none; /* Hide desktop nav on mobile */
+  }
+  
+  .navbar-mobile-menu {
+    top: 52px;
+  }
+  
+  .profile-name {
+    display: none; /* Hide profile name on mobile */
+  }
+  
+  .profile-trigger {
+    padding: 0.25rem;
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0 0.75rem;
+  }
+  
+  .navbar-brand {
+    font-size: 0.9375rem;
+  }
+  
+  .navbar-logo {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .mobile-nav-links a {
+    font-size: 0.9375rem;
+    padding: 0.8125rem 0.875rem;
+  }
+  
+  .navbar-mobile-menu {
+    padding: 1rem;
+  }
+}
+
+/* Focus States for Accessibility */
+.navbar-nav a:focus,
+.profile-trigger:focus,
+.navbar-toggle:focus,
+.mobile-nav-links a:focus,
+.mobile-profile-btn:focus {
+  outline: 2px solid #F7C85C;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .navbar {
+    border-bottom: 2px solid white;
+  }
+  
+  .navbar-nav a,
+  .profile-trigger {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .navbar {
+    display: none;
+  }
+}

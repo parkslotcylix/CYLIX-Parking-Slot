@@ -1,0 +1,173 @@
+<!-- Professional SaaS Dashboard Navbar -->
+<nav class="navbar">
+  <!-- Logo/Brand -->
+  <a href="/home" class="navbar-brand">
+    <div class="navbar-logo">
+      <img src="/static/images/logo.png" alt="ParkSlot Logo">
+    </div>
+    ParkSlot
+  </a>
+
+  <!-- Mobile Hamburger Toggle -->
+  <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Right Side: Navigation + Profile -->
+  <div class="navbar-right">
+    <!-- Navigation Links -->
+    <ul class="navbar-nav">
+      <li><a href="/home" class="nav-link" data-page="home">Home</a></li>
+      <li><a href="/analytics" class="nav-link" data-page="analytics">Report</a></li>
+      <li><a href="/parking" class="nav-link" data-page="parking">Parking</a></li>
+      <li><a href="/admin-management" class="nav-link" data-page="admin-management" id="adminManagementLink">Admin Management</a></li>
+    </ul>
+
+    <!-- Profile Dropdown -->
+    <div class="navbar-profile">
+      <div class="profile-trigger" id="profileTrigger">
+        <div class="profile-avatar-container">
+          <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile" style="display: none;">
+          <div class="profile-initials" id="profileInitials" style="display: flex;">A</div>
+        </div>
+        <span class="profile-name" id="profileName">Admin User</span>
+        <span class="dropdown-arrow">▼</span>
+      </div>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-header">
+          <div class="dropdown-admin-name" id="dropdownAdminName">Admin User</div>
+          <div class="dropdown-admin-email" id="dropdownAdminEmail">admin@example.com</div>
+          <div class="dropdown-badges">
+            <span id="dropdownRoleBadge"></span>
+            <span id="dropdownStatusBadge"></span>
+          </div>
+        </div>
+        <div class="dropdown-body">
+          <a href="/account" class="dropdown-item">
+            <span>👤</span>
+            <span>My Account</span>
+          </a>
+          <a href="/account" class="dropdown-item">
+            <span>⚙️</span>
+            <span>Account Settings</span>
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" onclick="handleLogout(event)" class="dropdown-item logout">
+            <span>🚪</span>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="navbar-mobile-menu" id="navbarMobileMenu">
+    <!-- Mobile Navigation Links -->
+    <ul class="mobile-nav-links">
+      <li><a href="/home" class="mobile-nav-link" data-page="home">Home</a></li>
+      <li><a href="/analytics" class="mobile-nav-link" data-page="analytics">Report</a></li>
+      <li><a href="/parking" class="mobile-nav-link" data-page="parking">Parking</a></li>
+      <li><a href="/admin-management" class="mobile-nav-link" data-page="admin-management" id="mobileAdminManagementLink">Admin Management</a></li>
+    </ul>
+
+    <!-- Mobile Profile Section -->
+    <div class="mobile-profile-section">
+      <div class="mobile-profile-info">
+        <div class="mobile-profile-avatar" id="mobileProfileAvatar">A</div>
+        <div class="mobile-profile-name" id="mobileProfileName">Admin User</div>
+        <div class="mobile-profile-email" id="mobileProfileEmail">admin@example.com</div>
+        <div class="mobile-profile-badges" id="mobileProfileBadges">
+          <!-- Badges will be populated by JavaScript -->
+        </div>
+      </div>
+      <div class="mobile-profile-actions">
+        <a href="/account" class="mobile-profile-btn primary">👤 My Account</a>
+        <a href="/account" class="mobile-profile-btn primary">⚙️ Account Settings</a>
+        <a href="#" onclick="handleLogout(event)" class="mobile-profile-btn danger">🚪 Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Navbar JavaScript for Active Link Management -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Set active navigation link based on current page
+  setActiveNavLink();
+  
+  // Hide Admin Management link if not super_admin
+  hideAdminManagementIfNotSuperAdmin();
+});
+
+function setActiveNavLink() {
+  const currentPath = window.location.pathname;
+  const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+  
+  // Remove all active classes first
+  navLinks.forEach(link => link.classList.remove('active'));
+  
+  // Determine current page based on path
+  let currentPage = '';
+  if (currentPath === '/home' || currentPath === '/') {
+    currentPage = 'home';
+  } else if (currentPath === '/analytics') {
+    currentPage = 'analytics';
+  } else if (currentPath === '/parking') {
+    currentPage = 'parking';
+  } else if (currentPath === '/admin-management') {
+    currentPage = 'admin-management';
+  } else if (currentPath === '/account') {
+    // Account page doesn't have a nav link, so no active state needed
+    return;
+  }
+  
+  // Set active class on matching links
+  if (currentPage) {
+    const matchingLinks = document.querySelectorAll(`[data-page="${currentPage}"]`);
+    matchingLinks.forEach(link => link.classList.add('active'));
+  }
+}
+
+function hideAdminManagementIfNotSuperAdmin() {
+  const accessLevel = sessionStorage.getItem('access_level');
+  if (accessLevel !== 'super_admin') {
+    const adminLinks = document.querySelectorAll('#adminManagementLink, #mobileAdminManagementLink');
+    adminLinks.forEach(link => {
+      const listItem = link.closest('li');
+      if (listItem) {
+        listItem.style.display = 'none';
+      }
+    });
+  }
+}
+
+// Global logout function
+async function handleLogout(event) {
+  event.preventDefault();
+  
+  if (confirm('Are you sure you want to logout?')) {
+    try {
+      // Call backend logout endpoint
+      await fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
+    // Clear all client-side storage
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    // Redirect to login
+    window.location.href = '/';
+  }
+}
+</script>
