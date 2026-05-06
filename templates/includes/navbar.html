@@ -172,4 +172,17 @@ async function handleLogout(event) {
     window.location.href = '/';
   }
 }
+
+// Initialize navbar functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize mobile navbar if the functions exist
+  if (typeof initializeMobileNavbar === 'function') {
+    initializeMobileNavbar();
+  }
+  
+  // Initialize profile dropdown if the functions exist  
+  if (typeof initializeProfileDropdown === 'function') {
+    initializeProfileDropdown();
+  }
+});
 </script>

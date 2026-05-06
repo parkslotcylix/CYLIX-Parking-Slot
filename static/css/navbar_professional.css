@@ -21,15 +21,14 @@
   z-index: 1000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  min-height: 56px; /* Ensure consistent height */
 }
 
 /* Left Section: Logo + Navigation Grouped Together */
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 2rem; /* Space between logo and nav links */
-  height: 100%; /* Full navbar height */
+  gap: 2.5rem; /* Space between logo and nav links */
+  height: 100%;
 }
 
 /* Logo - Compact and Clean */
@@ -74,22 +73,22 @@
   object-fit: cover;
 }
 
-/* Navigation Links - Tightly Grouped */
+/* Navigation Links - Perfectly Centered */
 .navbar-nav {
   display: flex;
   align-items: center;
-  gap: 0.25rem; /* Tight spacing between links */
+  gap: 0.5rem; /* Better spacing between links */
   list-style: none;
   margin: 0;
   padding: 0;
-  height: 100%; /* Full height of navbar */
+  height: 100%; /* Full height for perfect vertical centering */
 }
 
 .navbar-nav li {
   margin: 0;
-  height: 100%; /* Full height */
   display: flex;
-  align-items: center; /* Center vertically */
+  align-items: center;
+  height: 100%;
 }
 
 .navbar-nav a {
@@ -97,24 +96,25 @@
   text-decoration: none;
   font-weight: 500;
   font-size: 0.875rem;
-  padding: 0.75rem 1rem; /* Increased padding for better centering */
-  border-radius: 4px;
+  padding: 0.75rem 1rem; /* Better padding for centering */
+  border-radius: 6px;
   transition: all 0.2s ease;
   position: relative;
   white-space: nowrap;
-  text-transform: none; /* Remove uppercase for cleaner look */
+  text-transform: none;
   letter-spacing: normal;
   display: flex;
-  align-items: center; /* Center text vertically */
-  justify-content: center; /* Center text horizontally */
-  height: 100%; /* Full height for perfect centering */
-  min-height: 40px; /* Minimum clickable area */
+  align-items: center;
+  justify-content: center;
+  height: 40px; /* Fixed height for consistent alignment */
+  min-width: 80px; /* Minimum width for better appearance */
 }
 
 .navbar-nav a:hover {
   color: white;
   background: rgba(255, 255, 255, 0.08);
   text-decoration: none;
+  transform: translateY(-1px);
 }
 
 .navbar-nav a.active {
@@ -126,7 +126,7 @@
 .navbar-nav a.active::after {
   content: '';
   position: absolute;
-  bottom: 8px; /* Adjusted position for better centering */
+  bottom: 8px;
   left: 1rem;
   right: 1rem;
   height: 2px;
@@ -289,11 +289,7 @@
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.2s ease;
-  text-align: center; /* Center text horizontally */
-  display: flex;
-  align-items: center; /* Center text vertically */
-  justify-content: center; /* Center text horizontally */
-  min-height: 48px; /* Consistent height */
+  text-align: left;
 }
 
 .mobile-nav-links a:hover,
