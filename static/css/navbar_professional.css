@@ -8,11 +8,11 @@
   box-sizing: border-box;
 }
 
-/* Main Navbar - Slimmer Professional Height */
+/* Main Navbar - Professional Height with More Padding */
 .navbar {
   background: #1F2B26;
-  padding: 0 1.5rem;
-  height: 56px; /* Reduced from 70px for slimmer look */
+  padding: 0.75rem 1.5rem; /* Increased vertical padding from 0 to 0.75rem */
+  height: 64px; /* Increased from 56px to accommodate more padding */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -402,7 +402,7 @@
 /* Mobile Menu - Improved */
 .navbar-mobile-menu {
   position: fixed;
-  top: 56px; /* Match navbar height */
+  top: 64px; /* Updated to match new navbar height */
   left: 0;
   right: 0;
   bottom: 0;
@@ -562,8 +562,8 @@
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 1rem;
-    height: 52px; /* Even slimmer on mobile */
+    padding: 0.5rem 1rem; /* Increased mobile vertical padding */
+    height: 58px; /* Increased from 52px to accommodate more padding */
   }
   
   .navbar-brand {
@@ -584,7 +584,7 @@
   }
   
   .navbar-mobile-menu {
-    top: 52px;
+    top: 58px; /* Updated to match new mobile navbar height */
   }
   
   .profile-name {
