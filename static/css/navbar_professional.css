@@ -21,14 +21,29 @@
   z-index: 1000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative; /* Added for absolute positioning of center */
 }
 
-/* Left Section: Logo + Navigation Grouped Together */
+/* Left Section: Logo Only */
 .navbar-left {
   display: flex;
   align-items: center;
-  gap: 2.5rem; /* Space between logo and nav links */
   height: 100%;
+  z-index: 2; /* Above center section */
+  position: relative;
+}
+
+/* Center Section: Navigation Links */
+.navbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
 }
 
 /* Logo - Compact and Clean */
@@ -138,6 +153,8 @@
 .navbar-right {
   display: flex;
   align-items: center;
+  z-index: 2; /* Above center section */
+  position: relative;
 }
 
 /* Profile Section - Compact and Professional */
@@ -430,7 +447,7 @@
     display: flex;
   }
   
-  .navbar-left .navbar-nav {
+  .navbar-center {
     display: none; /* Hide desktop nav on mobile */
   }
   
