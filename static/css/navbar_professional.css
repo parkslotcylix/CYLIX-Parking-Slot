@@ -166,7 +166,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem; /* Reduced from 0.5rem */
-  padding: 0.2rem 0.6rem; /* Reduced padding */
+  padding: 0.2rem 0.6rem; /* Reduced from 0.25rem 0.75rem (20% less) */
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px; /* Smaller radius */
@@ -212,7 +212,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Profile Name - More Compact */
+/* Profile Name - Compact */
 .profile-name {
   font-size: 0.8rem; /* Reduced from 0.875rem */
   font-weight: 500;
@@ -223,9 +223,9 @@
   white-space: nowrap;
 }
 
-/* Dropdown Arrow - Smaller */
+/* Dropdown Arrow - Subtle */
 .dropdown-arrow {
-  font-size: 0.55rem; /* Reduced from 0.625rem */
+  font-size: 0.6rem; /* Reduced from 0.625rem */
   color: rgba(255, 255, 255, 0.6);
   transition: transform 0.2s ease;
 }
@@ -238,17 +238,17 @@
 /* Dropdown Menu */
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 12px); /* Increased spacing from navbar */
+  top: calc(100% + 2px); /* Much closer - down from 8px */
   right: 0;
-  min-width: 240px; /* Reduced from 280px */
+  min-width: 220px; /* Reduced from 280px */
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-radius: 6px; /* Reduced from 8px */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Reduced shadow */
   border: 1px solid rgba(0, 0, 0, 0.08);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  transform: translateY(-8px); /* Reduced from -10px */
+  transition: all 0.2s ease; /* Faster transition */
   z-index: 10000;
   overflow: hidden;
 }
@@ -259,26 +259,25 @@
   transform: translateY(0);
 }
 
-/* Dropdown Header - More Compact */
+/* Dropdown Header */
 .dropdown-header {
-  padding: 12px 14px; /* Reduced from 16px */
+  padding: 12px; /* Reduced from 16px (25% less) */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
 .dropdown-admin-name {
-  font-size: 13px; /* Reduced from 14px */
+  font-size: 12px; /* Reduced from 14px */
   font-weight: 600;
   margin-bottom: 3px; /* Reduced from 4px */
   color: white;
 }
 
 .dropdown-admin-email {
-  font-size: 11px; /* Reduced from 12px */
+  font-size: 10px; /* Reduced from 12px */
   opacity: 0.9;
-  margin-bottom: 10px; /* Reduced from 12px */
+  margin-bottom: 8px; /* Reduced from 12px */
   color: white;
-  word-break: break-word;
 }
 
 .dropdown-badges {
@@ -287,7 +286,7 @@
   flex-wrap: wrap;
 }
 
-/* Role and Status Badges - Smaller */
+/* Role and Status Badges */
 .role-badge, .status-badge {
   display: inline-flex;
   align-items: center;
@@ -326,7 +325,7 @@
   background: currentColor;
 }
 
-/* Dropdown Body - More Compact */
+/* Dropdown Body */
 .dropdown-body {
   padding: 6px 0; /* Reduced from 8px 0 */
 }
@@ -335,10 +334,10 @@
   display: flex;
   align-items: center;
   gap: 10px; /* Reduced from 12px */
-  padding: 10px 14px; /* Reduced from 12px 16px */
+  padding: 8px 12px; /* Reduced from 12px 16px (33% less) */
   color: #333;
   text-decoration: none;
-  font-size: 13px; /* Reduced from 14px */
+  font-size: 12px; /* Reduced from 14px */
   font-weight: 500;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -357,13 +356,6 @@
 .dropdown-item.logout:hover {
   background: #fff5f5;
   color: #d32f2f;
-}
-
-.dropdown-item span:first-child {
-  font-size: 16px; /* Reduced from 18px */
-  width: 20px; /* Reduced from 24px */
-  text-align: center;
-  flex-shrink: 0;
 }
 
 .dropdown-divider {
@@ -600,8 +592,23 @@
   }
   
   .profile-trigger {
-    padding: 0.2rem 0.4rem; /* More compact on mobile */
-    min-height: 28px; /* Smaller on mobile */
+    padding: 0.25rem;
+    min-height: 32px;
+  }
+  
+  /* Mobile dropdown adjustments */
+  .dropdown-menu {
+    min-width: 200px; /* Even smaller on mobile */
+    right: -5px; /* Slight adjustment for mobile */
+  }
+  
+  .dropdown-header {
+    padding: 10px; /* Even more compact on mobile */
+  }
+  
+  .dropdown-item {
+    padding: 6px 10px; /* More compact on mobile */
+    font-size: 11px; /* Smaller text on mobile */
   }
 }
 
