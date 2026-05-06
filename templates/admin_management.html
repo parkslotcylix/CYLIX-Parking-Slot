@@ -114,6 +114,7 @@
       border: 2px solid var(--card-border);
       border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
     }
 
     table {
@@ -133,6 +134,7 @@
       font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--green-mid);
     }
 
     tbody tr {
@@ -144,9 +146,22 @@
       background: var(--green-light);
     }
 
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
     tbody td {
       padding: 16px;
       font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    tbody td:first-child {
+      padding-left: 20px;
+    }
+
+    tbody td:last-child {
+      padding-right: 20px;
     }
 
     .admin-avatar {
@@ -154,15 +169,34 @@
       height: 40px;
       border-radius: 50%;
       object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .admin-avatar-fallback {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
     .badge {
-      display: inline-block;
-      padding: 4px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .badge-super {
@@ -204,6 +238,7 @@
     .actions {
       display: flex;
       gap: 8px;
+      align-items: center;
     }
 
     .btn-action {
@@ -212,49 +247,65 @@
       border-radius: 6px;
       font-family: 'Nunito', sans-serif;
       font-weight: 700;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      min-width: 70px;
+      text-align: center;
     }
 
     .btn-edit {
       background: #e3f2fd;
       color: #1565c0;
+      border: 1px solid #64b5f6;
     }
 
     .btn-edit:hover {
       background: #1565c0;
       color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.3);
     }
 
     .btn-deactivate {
       background: #fce4ec;
       color: #c62828;
+      border: 1px solid #ef9a9a;
     }
 
     .btn-deactivate:hover {
       background: #c62828;
       color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
     }
 
     .btn-activate {
       background: #e8f5e9;
       color: #2e7d32;
+      border: 1px solid #81c784;
     }
 
     .btn-activate:hover {
       background: #2e7d32;
       color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
     }
 
     .btn-delete {
       background: #ffebee;
       color: #d32f2f;
+      border: 1px solid #ffcdd2;
     }
 
     .btn-delete:hover {
       background: #d32f2f;
       color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
     }
 
     /* MODAL */
@@ -617,17 +668,30 @@
     
     tbody.innerHTML = admins.map(admin => 
       '<tr>' +
+    tbody.innerHTML = admins.map(admin => 
+      '<tr>' +
         '<td>' +
-          '<img src="' + (admin.profile_picture || '/static/images/default-profile.png') + '" ' +
-               'alt="' + admin.admin_name + '" ' +
-               'class="admin-avatar"/>' +
+          (admin.profile_picture ? 
+            '<img src="' + admin.profile_picture + '" ' +
+                 'alt="' + admin.admin_name + '" ' +
+                 'class="admin-avatar" ' +
+                 'onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\'"/>' +
+            '<div class="admin-avatar-fallback" style="display:none">' + 
+              admin.admin_name.charAt(0).toUpperCase() + 
+            '</div>' :
+            '<div class="admin-avatar-fallback">' + 
+              admin.admin_name.charAt(0).toUpperCase() + 
+            '</div>'
+          ) +
         '</td>' +
         '<td><strong>' + admin.admin_name + '</strong></td>' +
         '<td>' + admin.admin_email + '</td>' +
         '<td>' +
           '<span class="badge badge-' + (admin.access_level === 'super_admin' ? 'super' : admin.access_level) + '">' +
-            (admin.access_level === 'super_admin' ? '&#x1F451; Super Admin' : 
-              admin.access_level === 'admin' ? '&#x1F527; Admin' : '&#x1F441; Manager') +
+            '<span>' + (admin.access_level === 'super_admin' ? '👑' : 
+              admin.access_level === 'admin' ? '🔧' : '👁️') + '</span>' +
+            '<span>' + (admin.access_level === 'super_admin' ? 'Super Admin' : 
+              admin.access_level === 'admin' ? 'Admin' : 'Manager') + '</span>' +
           '</span>' +
         '</td>' +
         '<td>' +
