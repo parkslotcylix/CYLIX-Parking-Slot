@@ -11,16 +11,6 @@
     </a>
   </div>
 
-  <!-- Center Section: Navigation Links -->
-  <div class="navbar-center">
-    <ul class="navbar-nav">
-      <li><a href="/home" class="nav-link" data-page="home">Home</a></li>
-      <li><a href="/analytics" class="nav-link" data-page="analytics">Report</a></li>
-      <li><a href="/parking" class="nav-link" data-page="parking">Parking</a></li>
-      <li><a href="/admin-management" class="nav-link" data-page="admin-management" id="adminManagementLink">Admin Management</a></li>
-    </ul>
-  </div>
-
   <!-- Mobile Hamburger Toggle -->
   <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
     <span></span>
@@ -28,8 +18,19 @@
     <span></span>
   </button>
 
-  <!-- Right Section: Profile Only -->
+  <!-- Right Section: Navigation Links + Profile -->
   <div class="navbar-right">
+    <!-- Navigation Links -->
+    <div class="navbar-nav-container">
+      <ul class="navbar-nav">
+        <li><a href="/home" class="nav-link" data-page="home">Home</a></li>
+        <li><a href="/analytics" class="nav-link" data-page="analytics">Report</a></li>
+        <li><a href="/parking" class="nav-link" data-page="parking">Parking</a></li>
+        <li><a href="/admin-management" class="nav-link" data-page="admin-management" id="adminManagementLink">Admin Management</a></li>
+      </ul>
+    </div>
+    
+    <!-- Profile Dropdown -->
     <div class="navbar-profile">
       <div class="profile-trigger" id="profileTrigger">
         <div class="profile-avatar-container">
@@ -136,13 +137,42 @@ function setActiveNavLink() {
 }
 
 function hideAdminManagementIfNotSuperAdmin() {
+  // Get access level from session storage or check session
   const accessLevel = sessionStorage.getItem('access_level');
+  
+  // If no access level in session storage, try to get it from the server
+  if (!accessLevel) {
+    fetch('/api/check_session')
+      .then(response => response.json())
+      .then(data => {
+        if (data.logged_in) {
+          sessionStorage.setItem('access_level', data.access_level);
+          updateNavVisibility(data.access_level);
+        }
+      })
+      .catch(error => console.error('Error checking session:', error));
+  } else {
+    updateNavVisibility(accessLevel);
+  }
+}
+
+function updateNavVisibility(accessLevel) {
+  // Hide Admin Management link if not super_admin
   if (accessLevel !== 'super_admin') {
     const adminLinks = document.querySelectorAll('#adminManagementLink, #mobileAdminManagementLink');
     adminLinks.forEach(link => {
       const listItem = link.closest('li');
       if (listItem) {
         listItem.style.display = 'none';
+      }
+    });
+  } else {
+    // Show Admin Management link for super_admin
+    const adminLinks = document.querySelectorAll('#adminManagementLink, #mobileAdminManagementLink');
+    adminLinks.forEach(link => {
+      const listItem = link.closest('li');
+      if (listItem) {
+        listItem.style.display = 'block';
       }
     });
   }

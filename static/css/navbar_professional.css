@@ -21,7 +21,6 @@
   z-index: 1000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative; /* Added for absolute positioning of center */
 }
 
 /* Left Section: Logo Only */
@@ -29,21 +28,22 @@
   display: flex;
   align-items: center;
   height: 100%;
-  z-index: 2; /* Above center section */
-  position: relative;
+  flex-shrink: 0;
 }
 
-/* Center Section: Navigation Links */
-.navbar-center {
+/* Right Section: Navigation + Profile */
+.navbar-right {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex: 1;
+  gap: 2rem;
   height: 100%;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
+}
+
+/* Navigation Links Container */
+.navbar-nav-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 /* Logo - Compact and Clean */
@@ -166,13 +166,14 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.25rem 0.5rem; /* Much more compact */
+  padding: 0.25rem 0.75rem; /* More compact padding */
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px; /* Smaller radius */
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 36px; /* Reduced height */
+  max-width: fit-content; /* Wrap tightly around content */
 }
 
 .profile-trigger:hover {
@@ -447,7 +448,7 @@
     display: flex;
   }
   
-  .navbar-center {
+  .navbar-nav-container {
     display: none; /* Hide desktop nav on mobile */
   }
   
