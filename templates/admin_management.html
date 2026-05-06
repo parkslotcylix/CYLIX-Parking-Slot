@@ -269,6 +269,19 @@
       box-shadow: 0 2px 8px rgba(21, 101, 192, 0.3);
     }
 
+    .btn-profile {
+      background: #f3e5f5;
+      color: #6a1b9a;
+      border: 1px solid #ba68c8;
+    }
+
+    .btn-profile:hover {
+      background: #6a1b9a;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(106, 27, 154, 0.3);
+    }
+
     .btn-deactivate {
       background: #fce4ec;
       color: #c62828;
@@ -468,6 +481,48 @@
       margin-bottom: 20px;
       opacity: 0.5;
     }
+
+    /* Profile Picture Upload Styles */
+    .profile-picture-upload {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .current-picture {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--card-border);
+      background: var(--green-light);
+    }
+
+    .current-picture img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .btn-upload {
+      background: var(--green-mid);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-upload:hover {
+      background: var(--green-dark);
+    }
+
+    #profilePictureInput {
+      display: none;
+    }
   </style>
 {% endblock %}
 
@@ -586,6 +641,47 @@
 <div id="notification" class="notification">
   <div id="notificationMessage"></div>
 </div>
+
+<!-- PROFILE EDIT MODAL -->
+<div id="profileModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="profileModalTitle">Edit Admin Profile</h2>
+      <button class="btn-close" onclick="closeProfileModal()">&times;</button>
+    </div>
+    <form id="profileForm" onsubmit="handleProfileSubmit(event)">
+      <input type="hidden" id="editProfileAdminId" />
+      
+      <div class="form-group">
+        <label>Profile Picture</label>
+        <div class="profile-picture-upload">
+          <div class="current-picture">
+            <img id="currentProfilePicture" src="/static/images/default-profile.png" alt="Current Profile" />
+          </div>
+          <input type="file" id="profilePictureInput" accept="image/*" onchange="previewProfilePicture(event)" />
+          <button type="button" class="btn-upload" onclick="document.getElementById('profilePictureInput').click()">
+            Choose Picture
+          </button>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" id="profileName" required placeholder="Enter full name"/>
+      </div>
+      
+      <div class="form-group">
+        <label>Email Address *</label>
+        <input type="email" id="profileEmail" required placeholder="Enter email address"/>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
+        <button type="submit" class="btn-submit">Update Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -701,6 +797,7 @@
         '<td>' +
           '<div class="actions">' +
             '<button class="btn-action btn-edit" data-admin-id="' + admin.admin_id + '">Edit</button>' +
+            '<button class="btn-action btn-profile" data-admin-id="' + admin.admin_id + '">Edit Profile</button>' +
             (admin.status === 'active' ? 
               '<button class="btn-action btn-deactivate" data-admin-id="' + admin.admin_id + '" data-action="deactivate">Deactivate</button>' :
               '<button class="btn-action btn-activate" data-admin-id="' + admin.admin_id + '" data-action="activate">Activate</button>'
@@ -725,6 +822,14 @@
       button.addEventListener('click', function() {
         const adminId = parseInt(this.getAttribute('data-admin-id'));
         editAdmin(adminId);
+      });
+    });
+    
+    // Profile edit buttons
+    document.querySelectorAll('.btn-profile').forEach(button => {
+      button.addEventListener('click', function() {
+        const adminId = parseInt(this.getAttribute('data-admin-id'));
+        editAdminProfile(adminId);
       });
     });
     
@@ -937,6 +1042,74 @@
     setTimeout(() => {
       notification.classList.remove('show');
     }, 3000);
+  }
+
+  // Edit admin profile
+  function editAdminProfile(adminId) {
+    const admin = allAdmins.find(a => a.admin_id === adminId);
+    if (!admin) return;
+    
+    document.getElementById('profileModalTitle').textContent = 'Edit Profile - ' + admin.admin_name;
+    document.getElementById('editProfileAdminId').value = adminId;
+    document.getElementById('profileName').value = admin.admin_name;
+    document.getElementById('profileEmail').value = admin.admin_email;
+    document.getElementById('currentProfilePicture').src = admin.profile_picture || '/static/images/default-profile.png';
+    document.getElementById('profileModal').classList.add('show');
+  }
+
+  // Close profile modal
+  function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('show');
+    document.getElementById('profileForm').reset();
+  }
+
+  // Preview profile picture
+  function previewProfilePicture(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('currentProfilePicture').src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // Handle profile form submit
+  async function handleProfileSubmit(event) {
+    event.preventDefault();
+    
+    const adminId = document.getElementById('editProfileAdminId').value;
+    const formData = new FormData();
+    
+    formData.append('admin_id', adminId);
+    formData.append('admin_name', document.getElementById('profileName').value);
+    formData.append('admin_email', document.getElementById('profileEmail').value);
+    
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    if (profilePictureInput.files[0]) {
+      formData.append('profile_picture', profilePictureInput.files[0]);
+    }
+    
+    try {
+      const response = await fetch(API_BASE + '/update_admin_profile', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showNotification('Profile updated successfully!', 'success');
+        closeProfileModal();
+        loadAdmins();
+      } else {
+        showNotification(data.error || 'Failed to update profile', 'error');
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      showNotification('Error updating profile', 'error');
+    }
   }
 
   // Load admins on page load

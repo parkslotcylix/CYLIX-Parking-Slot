@@ -2146,6 +2146,80 @@ def reset_admin_password():
         print(f"Reset password error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# Update admin profile with picture upload (super_admin only)
+@app.route('/api/update_admin_profile', methods=['POST'])
+def update_admin_profile():
+    try:
+        # Check if user is logged in and is super_admin
+        if 'user_id' not in session:
+            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
+        
+        if session.get('access_level') != 'super_admin':
+            return jsonify({'success': False, 'error': 'Access Denied: Super Admin privileges required'}), 403
+        
+        admin_id = request.form.get('admin_id')
+        admin_name = request.form.get('admin_name')
+        admin_email = request.form.get('admin_email')
+        
+        if not admin_id or not admin_name or not admin_email:
+            return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+        
+        connection = get_db_connection()
+        if connection is None:
+            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
+        
+        cursor = get_db_cursor(connection)
+        
+        # Handle profile picture upload
+        profile_picture_url = None
+        if 'profile_picture' in request.files:
+            file = request.files['profile_picture']
+            if file and file.filename and allowed_file(file.filename):
+                # Check file size
+                file.seek(0, 2)  # Seek to end
+                file_size = file.tell()
+                file.seek(0)  # Reset to beginning
+                
+                if file_size > MAX_FILE_SIZE:
+                    return jsonify({'success': False, 'error': 'File too large. Maximum size is 5MB'}), 400
+                
+                # Generate secure filename
+                filename = secure_filename(file.filename)
+                timestamp = str(int(time.time()))
+                filename = f"{admin_id}_{timestamp}_{filename}"
+                
+                # Save file
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(file_path)
+                
+                # Set profile picture URL
+                profile_picture_url = f'/static/images/profiles/{filename}'
+        
+        # Update admin profile
+        if profile_picture_url:
+            cursor.execute(
+                "UPDATE admin SET admin_name = %s, admin_email = %s, profile_picture = %s, updated_at = CURRENT_TIMESTAMP WHERE admin_id = %s",
+                (admin_name, admin_email, profile_picture_url, admin_id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE admin SET admin_name = %s, admin_email = %s, updated_at = CURRENT_TIMESTAMP WHERE admin_id = %s",
+                (admin_name, admin_email, admin_id)
+            )
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Profile updated successfully',
+            'profile_picture': profile_picture_url
+        })
+        
+    except Exception as e:
+        print(f"Update admin profile error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Handle preflight requests
 @app.before_request
 def handle_preflight():

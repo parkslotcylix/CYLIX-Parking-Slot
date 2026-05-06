@@ -216,5 +216,30 @@ document.addEventListener('DOMContentLoaded', function() {
   if (typeof initializeProfileDropdown === 'function') {
     initializeProfileDropdown();
   }
+  
+  // Initialize profile dropdown click handler
+  initializeProfileDropdownClick();
 });
+
+// Profile dropdown click handler
+function initializeProfileDropdownClick() {
+  const profileTrigger = document.getElementById('profileTrigger');
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  
+  if (profileTrigger && dropdownMenu) {
+    // Add click handler
+    profileTrigger.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!profileTrigger.contains(e.target) && !dropdownMenu.contains(e.target)) {
+        dropdownMenu.classList.remove('show');
+      }
+    });
+  }
+}
 </script>
