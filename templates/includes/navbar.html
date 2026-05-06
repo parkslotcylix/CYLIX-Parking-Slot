@@ -1,12 +1,23 @@
 <!-- Professional SaaS Dashboard Navbar -->
 <nav class="navbar">
-  <!-- Logo/Brand -->
-  <a href="/home" class="navbar-brand">
-    <div class="navbar-logo">
-      <img src="/static/images/logo.png" alt="ParkSlot Logo">
-    </div>
-    ParkSlot
-  </a>
+  <!-- Left Section: Logo + Navigation Grouped -->
+  <div class="navbar-left">
+    <!-- Logo/Brand -->
+    <a href="/home" class="navbar-brand">
+      <div class="navbar-logo">
+        <img src="/static/images/logo.png" alt="ParkSlot Logo"/>
+      </div>
+      ParkSlot
+    </a>
+
+    <!-- Navigation Links - Tightly Grouped -->
+    <ul class="navbar-nav">
+      <li><a href="/home" class="nav-link" data-page="home">Home</a></li>
+      <li><a href="/analytics" class="nav-link" data-page="analytics">Report</a></li>
+      <li><a href="/parking" class="nav-link" data-page="parking">Parking</a></li>
+      <li><a href="/admin-management" class="nav-link" data-page="admin-management" id="adminManagementLink">Admin Management</a></li>
+    </ul>
+  </div>
 
   <!-- Mobile Hamburger Toggle -->
   <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
@@ -15,22 +26,13 @@
     <span></span>
   </button>
 
-  <!-- Right Side: Navigation + Profile -->
+  <!-- Right Section: Profile Only -->
   <div class="navbar-right">
-    <!-- Navigation Links -->
-    <ul class="navbar-nav">
-      <li><a href="/home" class="nav-link" data-page="home">Home</a></li>
-      <li><a href="/analytics" class="nav-link" data-page="analytics">Report</a></li>
-      <li><a href="/parking" class="nav-link" data-page="parking">Parking</a></li>
-      <li><a href="/admin-management" class="nav-link" data-page="admin-management" id="adminManagementLink">Admin Management</a></li>
-    </ul>
-
-    <!-- Profile Dropdown -->
     <div class="navbar-profile">
       <div class="profile-trigger" id="profileTrigger">
         <div class="profile-avatar-container">
           <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile" style="display: none;">
-          <div class="profile-initials" id="profileInitials" style="display: flex;">A</div>
+          <div class="profile-initials" id="profileInitials">A</div>
         </div>
         <span class="profile-name" id="profileName">Admin User</span>
         <span class="dropdown-arrow">▼</span>
