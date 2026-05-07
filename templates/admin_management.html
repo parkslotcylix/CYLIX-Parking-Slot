@@ -724,7 +724,17 @@
       
       <div class="form-group">
         <label>Email Address *</label>
-        <input type="email" id="adminEmail" required placeholder="Enter email address"/>
+        <input 
+          type="email" 
+          id="adminEmail" 
+          required 
+          placeholder="example@umak.edu.ph"
+          pattern="[a-zA-Z0-9._%+-]+@umak\.edu\.ph$"
+          title="Only University of Makati email addresses (@umak.edu.ph) are allowed"
+        />
+        <small style="color: #666; font-size: 0.75rem; margin-top: 4px; display: block;">
+          Only @umak.edu.ph emails are accepted
+        </small>
       </div>
       
       <div class="form-group" id="passwordGroupEdit" style="display: none;">
@@ -1244,6 +1254,14 @@
           return;
         }
         
+        // Validate email domain (only @umak.edu.ph allowed)
+        if (!adminData.admin_email.toLowerCase().endsWith('@umak.edu.ph')) {
+          showNotification('Only University of Makati email addresses (@umak.edu.ph) are allowed', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+        
         if (!adminData.admin_password || adminData.admin_password.length < 8) {
           showNotification('Password must be at least 8 characters', 'error');
           submitButton.disabled = false;
@@ -1296,8 +1314,17 @@
           return;
         }
         
-        if (!document.getElementById('adminEmail').value.trim() || !document.getElementById('adminEmail').value.includes('@')) {
+        const emailValue = document.getElementById('adminEmail').value.trim();
+        if (!emailValue || !emailValue.includes('@')) {
           showNotification('Valid email is required', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+        
+        // Validate email domain (only @umak.edu.ph allowed)
+        if (!emailValue.toLowerCase().endsWith('@umak.edu.ph')) {
+          showNotification('Only University of Makati email addresses (@umak.edu.ph) are allowed', 'error');
           submitButton.disabled = false;
           submitButton.textContent = originalButtonText;
           return;
@@ -1387,6 +1414,14 @@
         
         if (!adminData.admin_email || !adminData.admin_email.includes('@')) {
           showNotification('Valid email is required', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+        
+        // Validate email domain (only @umak.edu.ph allowed)
+        if (!adminData.admin_email.toLowerCase().endsWith('@umak.edu.ph')) {
+          showNotification('Only University of Makati email addresses (@umak.edu.ph) are allowed', 'error');
           submitButton.disabled = false;
           submitButton.textContent = originalButtonText;
           return;

@@ -2240,6 +2240,10 @@ def create_admin():
         if '@' not in data['admin_email']:
             return jsonify({'success': False, 'error': 'Invalid email format'}), 400
         
+        # Validate email domain (only @umak.edu.ph allowed)
+        if not data['admin_email'].lower().endswith('@umak.edu.ph'):
+            return jsonify({'success': False, 'error': 'Only University of Makati email addresses (@umak.edu.ph) are allowed'}), 400
+        
         # Validate access level
         valid_levels = ['super_admin', 'admin', 'manager']
         if data['access_level'] not in valid_levels:
@@ -2392,6 +2396,9 @@ def update_admin():
         if 'admin_name' in data:
             update_data['admin_name'] = data['admin_name']
         if 'admin_email' in data:
+            # Validate email domain if email is being updated
+            if not data['admin_email'].lower().endswith('@umak.edu.ph'):
+                return jsonify({'success': False, 'error': 'Only University of Makati email addresses (@umak.edu.ph) are allowed'}), 400
             update_data['admin_email'] = data['admin_email']
         if 'access_level' in data:
             update_data['access_level'] = data['access_level']
@@ -2524,6 +2531,10 @@ def update_admin_profile():
         # Validate email format
         if '@' not in admin_email:
             return jsonify({'success': False, 'error': 'Invalid email address'}), 400
+        
+        # Validate email domain (only @umak.edu.ph allowed)
+        if not admin_email.lower().endswith('@umak.edu.ph'):
+            return jsonify({'success': False, 'error': 'Only University of Makati email addresses (@umak.edu.ph) are allowed'}), 400
         
         # Validate access level
         valid_access_levels = ['super_admin', 'admin', 'manager']
