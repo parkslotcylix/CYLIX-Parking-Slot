@@ -459,8 +459,10 @@ def get_db_cursor(connection):
 
 # Email sending function
 def send_email(recipient_email, subject, html_content):
-    """Send email using Gmail SMTP"""
+    """Send email using Gmail SMTP with timeout handling"""
     try:
+        print(f"📧 Attempting to send email to: {recipient_email}")
+        
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = EMAIL_CONFIG['sender_email']
@@ -469,14 +471,24 @@ def send_email(recipient_email, subject, html_content):
         part = MIMEText(html_content, 'html')
         msg.attach(part)
         
-        with smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port']) as server:
+        # Use timeout for SMTP connection
+        with smtplib.SMTP(EMAIL_CONFIG['smtp_server'], EMAIL_CONFIG['smtp_port'], timeout=30) as server:
             server.starttls()
             server.login(EMAIL_CONFIG['sender_email'], EMAIL_CONFIG['sender_password'])
             server.send_message(msg)
         
+        print(f"✅ Email sent successfully to: {recipient_email}")
         return True
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ SMTP Authentication error: {e}")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"❌ SMTP error: {e}")
+        return False
     except Exception as e:
-        print(f"Email sending error: {e}")
+        print(f"❌ Email sending error: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 # Generate random token
@@ -1603,28 +1615,47 @@ def forgot_password():
             return '', 200
         
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'Invalid request data'}), 400
+            
         email = data.get('email', '').strip()
         
         if not email:
             return jsonify({'success': False, 'error': 'Email is required'}), 400
         
+        # Validate email format
+        if '@' not in email or '.' not in email:
+            return jsonify({'success': False, 'error': 'Invalid email format'}), 400
+        
+        print(f"🔍 Forgot password request for: {email}")
+        
         # Fetch user directly from Supabase using the provided email
-        response = requests.get(
-            f"{SUPABASE_URL}/rest/v1/admin",
-            headers=SUPABASE_HEADERS,
-            params={
-                'admin_email': f'eq.{email}',
-                'select': 'admin_id,admin_email,admin_name'
-            },
-            timeout=10
-        )
-        
-        if response.status_code != 200:
-            return jsonify({'success': False, 'error': 'Database query failed'}), 500
-        
-        users = response.json()
+        try:
+            response = requests.get(
+                f"{SUPABASE_URL}/rest/v1/admin",
+                headers=SUPABASE_HEADERS,
+                params={
+                    'admin_email': f'eq.{email}',
+                    'select': 'admin_id,admin_email,admin_name'
+                },
+                timeout=10
+            )
+            
+            if response.status_code != 200:
+                print(f"❌ Database query failed: {response.status_code}")
+                return jsonify({'success': False, 'error': 'Database query failed'}), 500
+            
+            users = response.json()
+            
+        except requests.exceptions.Timeout:
+            print(f"❌ Database query timeout")
+            return jsonify({'success': False, 'error': 'Database connection timeout'}), 504
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Database query error: {e}")
+            return jsonify({'success': False, 'error': 'Database connection error'}), 500
         
         if not users or len(users) == 0:
+            print(f"ℹ️  Email not found: {email}")
             # For security, don't reveal if email exists or not
             return jsonify({
                 'success': True, 
@@ -1636,6 +1667,8 @@ def forgot_password():
         admin_id = user['admin_id']
         admin_email = user['admin_email']  # Use email from database, not from input
         admin_name = user['admin_name']    # Use name from database
+        
+        print(f"✅ User found: {admin_name} ({admin_email})")
         
         # Generate reset token
         reset_token = generate_reset_token()
@@ -1657,7 +1690,7 @@ def forgot_password():
             print(f"✅ Reset token stored: {reset_token[:10]}... for admin_id: {admin_id}, name: {admin_name}")
         except Exception as e:
             print(f"⚠️  Error storing reset token: {e}")
-            # Continue anyway - token will be generated but not stored
+            # Continue anyway - we'll still send the email
         
         # Create reset link using request host or BASE_URL
         if request.host:
@@ -1732,22 +1765,33 @@ def forgot_password():
         """
         
         # Send email to the user's email from the database (not from input)
-        email_sent = send_email(admin_email, subject, html_content)
-        
-        if email_sent:
-            return jsonify({
-                'success': True, 
-                'message': 'Password reset link sent to your email'
-            }), 200
-        else:
+        try:
+            email_sent = send_email(admin_email, subject, html_content)
+            
+            if email_sent:
+                print(f"✅ Email sent successfully to {admin_email}")
+                return jsonify({
+                    'success': True, 
+                    'message': 'Password reset link sent to your email'
+                }), 200
+            else:
+                print(f"❌ Email sending failed for {admin_email}")
+                return jsonify({
+                    'success': False, 
+                    'error': 'Failed to send email. Please try again later.'
+                }), 500
+        except Exception as email_error:
+            print(f"❌ Email exception: {email_error}")
             return jsonify({
                 'success': False, 
-                'error': 'Failed to send email. Please try again later.'
+                'error': 'Failed to send email. Please check email configuration.'
             }), 500
             
     except Exception as e:
-        print(f"Forgot password error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
+        print(f"❌ Forgot password error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': 'An unexpected error occurred. Please try again later.'}), 500
 
 # Upload admin profile picture
 @app.route('/api/upload_profile_picture', methods=['POST', 'OPTIONS'])
