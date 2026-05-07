@@ -71,7 +71,9 @@ EMAIL_CONFIG = {
     'sender_email': os.getenv('EMAIL_SENDER', 'parkslotcylix@gmail.com'),
     'sender_password': os.getenv('EMAIL_PASSWORD', 'dzxy kmck urft qodf'),
     'smtp_server': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
-    'smtp_port': int(os.getenv('SMTP_PORT', 587))
+    'smtp_port': int(os.getenv('SMTP_PORT', 587)),
+    'use_sendgrid': os.getenv('USE_SENDGRID', 'false').lower() == 'true',
+    'sendgrid_api_key': os.getenv('SENDGRID_API_KEY', '')
 }
 
 # Base URL for password reset links (use environment variable or request host)
@@ -459,10 +461,52 @@ def get_db_cursor(connection):
 
 # Email sending function
 def send_email(recipient_email, subject, html_content):
-    """Send email using Gmail SMTP with timeout handling"""
+    """Send email using SendGrid API or Gmail SMTP with timeout handling"""
     try:
         print(f"📧 Attempting to send email to: {recipient_email}")
         
+        # Try SendGrid first if configured
+        if EMAIL_CONFIG.get('use_sendgrid') and EMAIL_CONFIG.get('sendgrid_api_key'):
+            try:
+                print(f"📧 Using SendGrid API")
+                import requests
+                
+                sendgrid_url = "https://api.sendgrid.com/v3/mail/send"
+                headers = {
+                    "Authorization": f"Bearer {EMAIL_CONFIG['sendgrid_api_key']}",
+                    "Content-Type": "application/json"
+                }
+                
+                data = {
+                    "personalizations": [{
+                        "to": [{"email": recipient_email}],
+                        "subject": subject
+                    }],
+                    "from": {
+                        "email": EMAIL_CONFIG['sender_email'],
+                        "name": "ParkSlot"
+                    },
+                    "content": [{
+                        "type": "text/html",
+                        "value": html_content
+                    }]
+                }
+                
+                response = requests.post(sendgrid_url, headers=headers, json=data, timeout=10)
+                
+                if response.status_code == 202:
+                    print(f"✅ Email sent successfully via SendGrid to: {recipient_email}")
+                    return True
+                else:
+                    print(f"❌ SendGrid error: {response.status_code} - {response.text}")
+                    # Fall back to SMTP
+                    
+            except Exception as sendgrid_error:
+                print(f"❌ SendGrid exception: {sendgrid_error}")
+                # Fall back to SMTP
+        
+        # Fall back to SMTP (Gmail)
+        print(f"📧 Using SMTP (Gmail)")
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = EMAIL_CONFIG['sender_email']
@@ -477,8 +521,9 @@ def send_email(recipient_email, subject, html_content):
             server.login(EMAIL_CONFIG['sender_email'], EMAIL_CONFIG['sender_password'])
             server.send_message(msg)
         
-        print(f"✅ Email sent successfully to: {recipient_email}")
+        print(f"✅ Email sent successfully via SMTP to: {recipient_email}")
         return True
+        
     except smtplib.SMTPAuthenticationError as e:
         print(f"❌ SMTP Authentication error: {e}")
         return False
