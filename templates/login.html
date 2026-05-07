@@ -322,6 +322,88 @@
       border: 1.5px solid;
     }
 
+    /* Account Status Block Card */
+    .status-block-card {
+      display: none;
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      border: 2px solid;
+      animation: slideIn 0.3s ease;
+    }
+
+    .status-block-card.show {
+      display: block;
+    }
+
+    .status-block-card.inactive {
+      border-color: #ef9a9a;
+      background: linear-gradient(135deg, #ffebee 0%, #ffffff 100%);
+    }
+
+    .status-block-card.suspended {
+      border-color: #ffb74d;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
+    }
+
+    .status-block-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+
+    .status-block-card.inactive .status-block-icon {
+      background: linear-gradient(135deg, #ef5350 0%, #c62828 100%);
+      box-shadow: 0 8px 20px rgba(198, 40, 40, 0.3);
+    }
+
+    .status-block-card.suspended .status-block-icon {
+      background: linear-gradient(135deg, #ff9800 0%, #ef6c00 100%);
+      box-shadow: 0 8px 20px rgba(239, 108, 0, 0.3);
+    }
+
+    .status-block-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .status-block-card.inactive .status-block-title {
+      color: #c62828;
+    }
+
+    .status-block-card.suspended .status-block-title {
+      color: #ef6c00;
+    }
+
+    .status-block-message {
+      color: var(--gray-700);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .status-block-contact {
+      background: rgba(0, 0, 0, 0.03);
+      padding: 1rem;
+      border-radius: var(--radius-lg);
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      line-height: 1.6;
+    }
+
+    .status-block-contact strong {
+      color: var(--gray-900);
+    }
+
     @keyframes slideIn {
       from {
         opacity: 0;
@@ -641,6 +723,21 @@
         <span id="success-text"></span>
       </div>
 
+      <!-- Account Status Block Card -->
+      <div id="status-block-card" class="status-block-card">
+        <div class="status-block-icon">
+          <span id="status-block-emoji">🚫</span>
+        </div>
+        <h3 class="status-block-title" id="status-block-title">Account Inactive</h3>
+        <p class="status-block-message" id="status-block-message">
+          Your account has been deactivated and you cannot log in at this time.
+        </p>
+        <div class="status-block-contact">
+          <strong>Need Help?</strong><br>
+          Please contact your system administrator to reactivate your account or for more information.
+        </div>
+      </div>
+
       <!-- Password Reset Modal -->
       <div id="resetModal" class="modal">
         <div class="modal-content">
@@ -720,13 +817,20 @@
   function hideMessages() {
     const errorDiv = document.getElementById('error-message');
     const successDiv = document.getElementById('success-message');
+    const statusBlockCard = document.getElementById('status-block-card');
     errorDiv.style.display = 'none';
     successDiv.style.display = 'none';
+    statusBlockCard.classList.remove('show');
   }
 
   function showError(message) {
     const errorDiv = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
+    const statusBlockCard = document.getElementById('status-block-card');
+    
+    // Hide status block when showing regular error
+    statusBlockCard.classList.remove('show');
+    
     errorText.innerHTML = message;
     errorDiv.style.display = 'flex';
     // auto hide after 6s
@@ -738,11 +842,58 @@
   function showSuccess(message) {
     const successDiv = document.getElementById('success-message');
     const successText = document.getElementById('success-text');
+    const statusBlockCard = document.getElementById('status-block-card');
+    
+    // Hide status block when showing success
+    statusBlockCard.classList.remove('show');
+    
     successText.innerHTML = message;
     successDiv.style.display = 'flex';
     setTimeout(() => {
       if (successDiv.style.display === 'flex') successDiv.style.display = 'none';
     }, 3000);
+  }
+
+  function showStatusBlock(status, message) {
+    const statusBlockCard = document.getElementById('status-block-card');
+    const statusBlockTitle = document.getElementById('status-block-title');
+    const statusBlockMessage = document.getElementById('status-block-message');
+    const statusBlockEmoji = document.getElementById('status-block-emoji');
+    const errorDiv = document.getElementById('error-message');
+    const successDiv = document.getElementById('success-message');
+    
+    // Hide regular messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Remove previous status classes
+    statusBlockCard.classList.remove('inactive', 'suspended');
+    
+    // Configure based on status
+    if (status === 'inactive') {
+      statusBlockCard.classList.add('inactive');
+      statusBlockTitle.textContent = 'Account Inactive';
+      statusBlockEmoji.textContent = '🚫';
+      statusBlockMessage.textContent = message || 'Your account has been deactivated and you cannot log in at this time.';
+    } else if (status === 'suspended') {
+      statusBlockCard.classList.add('suspended');
+      statusBlockTitle.textContent = 'Account Suspended';
+      statusBlockEmoji.textContent = '⚠️';
+      statusBlockMessage.textContent = message || 'Your account has been suspended due to administrative action.';
+    }
+    
+    // Show the status block card
+    statusBlockCard.classList.add('show');
+    
+    // Hide login form
+    const loginForm = document.getElementById('login-form');
+    loginForm.style.display = 'none';
+    
+    // Auto-hide after 10 seconds and show form again
+    setTimeout(() => {
+      statusBlockCard.classList.remove('show');
+      loginForm.style.display = 'block';
+    }, 10000);
   }
 
   // Toggle password visibility with icon change
@@ -926,9 +1077,15 @@
           window.location.href = '/home';
         }, 1200);
       } else {
-        // Login failed: show error from API or generic message
-        const errorMsg = data.error || 'Invalid email or password. Please try again.';
-        showError(errorMsg);
+        // Check if this is a status-related error
+        if (data.status && (data.status === 'inactive' || data.status === 'suspended')) {
+          // Show status block card instead of regular error
+          showStatusBlock(data.status, data.message);
+        } else {
+          // Login failed: show error from API or generic message
+          const errorMsg = data.error || 'Invalid email or password. Please try again.';
+          showError(errorMsg);
+        }
         loginBtn.disabled = false;
         loginBtn.innerHTML = originalBtnText;
       }

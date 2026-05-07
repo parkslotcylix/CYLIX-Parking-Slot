@@ -2276,6 +2276,93 @@ def create_admin():
         
         if create_response.status_code in [200, 201]:
             created_admin = create_response.json()[0] if isinstance(create_response.json(), list) else create_response.json()
+            
+            # Send welcome email to new admin in background
+            def send_welcome_email_async():
+                try:
+                    print(f"📧 Sending welcome email to new admin: {created_admin['admin_email']}")
+                    
+                    subject = "Welcome to ParkSlot - Account Created"
+                    html_content = f"""
+                    <!DOCTYPE html>
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        </head>
+                        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                            <!-- Header -->
+                                            <tr>
+                                                <td style="background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%); padding: 30px; text-align: center;">
+                                                    <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">ParkSlot</h1>
+                                                    <p style="color: #e8f5e9; margin: 5px 0 0 0; font-size: 14px;">Smart Parking Management System</p>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- Content -->
+                                            <tr>
+                                                <td style="padding: 40px 30px;">
+                                                    <h2 style="color: #1a4731; margin: 0 0 20px 0; font-size: 24px;">Welcome to ParkSlot!</h2>
+                                                    <p style="color: #333333; line-height: 1.6; margin: 0 0 15px 0;">Hello <strong>{created_admin['admin_name']}</strong>,</p>
+                                                    <p style="color: #333333; line-height: 1.6; margin: 0 0 25px 0;">Your administrator account has been successfully created by the system administrator.</p>
+                                                    
+                                                    <!-- Account Details Box -->
+                                                    <div style="background-color: #e8f5e9; border-left: 4px solid #1a4731; padding: 20px; margin: 25px 0; border-radius: 4px;">
+                                                        <p style="color: #1a4731; margin: 0 0 10px 0; font-weight: bold; font-size: 16px;">📋 Your Account Details:</p>
+                                                        <p style="color: #333333; margin: 5px 0; line-height: 1.8;">
+                                                            <strong>Email:</strong> {created_admin['admin_email']}<br>
+                                                            <strong>Role:</strong> {created_admin['access_level'].replace('_', ' ').title()}<br>
+                                                            <strong>Status:</strong> Active
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <!-- Login Instructions -->
+                                                    <div style="background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin: 25px 0; border-radius: 4px;">
+                                                        <p style="color: #e65100; margin: 0 0 10px 0; font-weight: bold; font-size: 16px;">🔐 Login Instructions:</p>
+                                                        <p style="color: #333333; margin: 5px 0; line-height: 1.8;">
+                                                            1. Visit the ParkSlot admin portal<br>
+                                                            2. Use your email address to log in<br>
+                                                            3. Use the password provided by your administrator<br>
+                                                            4. Update your profile and password after first login
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <p style="color: #666666; line-height: 1.6; margin: 20px 0 0 0; font-size: 14px;">If you have any questions or need assistance, please contact your system administrator.</p>
+                                                </td>
+                                            </tr>
+                                            
+                                            <!-- Footer -->
+                                            <tr>
+                                                <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                                                    <p style="color: #999999; margin: 0; font-size: 12px;">© 2026 ParkSlot. All rights reserved.</p>
+                                                    <p style="color: #999999; margin: 5px 0 0 0; font-size: 11px;">This is a system-generated email. Please do not reply.</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </body>
+                    </html>
+                    """
+                    
+                    email_sent = send_email(created_admin['admin_email'], subject, html_content)
+                    if email_sent:
+                        print(f"✅ Welcome email sent successfully to {created_admin['admin_email']}")
+                    else:
+                        print(f"❌ Failed to send welcome email to {created_admin['admin_email']}")
+                except Exception as e:
+                    print(f"❌ Welcome email error: {e}")
+            
+            # Send email in background thread
+            email_thread = threading.Thread(target=send_welcome_email_async)
+            email_thread.daemon = True
+            email_thread.start()
+            
             return jsonify({
                 'success': True,
                 'message': 'Admin created successfully',
