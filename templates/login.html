@@ -322,88 +322,6 @@
       border: 1.5px solid;
     }
 
-    /* Account Status Block Card */
-    .status-block-card {
-      display: none;
-      background: white;
-      border-radius: var(--radius-xl);
-      padding: 2.5rem;
-      margin-bottom: 1.5rem;
-      text-align: center;
-      border: 2px solid;
-      animation: slideIn 0.3s ease;
-    }
-
-    .status-block-card.show {
-      display: block;
-    }
-
-    .status-block-card.inactive {
-      border-color: #ef9a9a;
-      background: linear-gradient(135deg, #ffebee 0%, #ffffff 100%);
-    }
-
-    .status-block-card.suspended {
-      border-color: #ffb74d;
-      background: linear-gradient(135deg, #fff3e0 0%, #ffffff 100%);
-    }
-
-    .status-block-icon {
-      width: 80px;
-      height: 80px;
-      margin: 0 auto 1.5rem;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-    }
-
-    .status-block-card.inactive .status-block-icon {
-      background: linear-gradient(135deg, #ef5350 0%, #c62828 100%);
-      box-shadow: 0 8px 20px rgba(198, 40, 40, 0.3);
-    }
-
-    .status-block-card.suspended .status-block-icon {
-      background: linear-gradient(135deg, #ff9800 0%, #ef6c00 100%);
-      box-shadow: 0 8px 20px rgba(239, 108, 0, 0.3);
-    }
-
-    .status-block-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-      letter-spacing: -0.02em;
-    }
-
-    .status-block-card.inactive .status-block-title {
-      color: #c62828;
-    }
-
-    .status-block-card.suspended .status-block-title {
-      color: #ef6c00;
-    }
-
-    .status-block-message {
-      color: var(--gray-700);
-      line-height: 1.6;
-      margin-bottom: 1.5rem;
-      font-size: 0.95rem;
-    }
-
-    .status-block-contact {
-      background: rgba(0, 0, 0, 0.03);
-      padding: 1rem;
-      border-radius: var(--radius-lg);
-      font-size: 0.85rem;
-      color: var(--gray-600);
-      line-height: 1.6;
-    }
-
-    .status-block-contact strong {
-      color: var(--gray-900);
-    }
-
     @keyframes slideIn {
       from {
         opacity: 0;
@@ -452,6 +370,99 @@
       align-items: center;
       justify-content: center;
       font-size: 0.9rem;
+    }
+
+    /* Account Status Card */
+    .status-card {
+      display: none;
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      border: 2px solid;
+      animation: slideIn 0.3s ease;
+    }
+
+    .status-card.show {
+      display: block;
+    }
+
+    .status-card.inactive {
+      border-color: #FECACA;
+      background: linear-gradient(135deg, #FEF2F2 0%, #FFFFFF 100%);
+    }
+
+    .status-card.suspended {
+      border-color: #FED7AA;
+      background: linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 100%);
+    }
+
+    .status-card-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .status-card.inactive .status-card-icon {
+      background: rgba(185, 28, 28, 0.1);
+      color: var(--error-text);
+    }
+
+    .status-card.suspended .status-card-icon {
+      background: rgba(234, 88, 12, 0.1);
+      color: #EA580C;
+    }
+
+    .status-card h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-card.inactive h3 {
+      color: var(--error-text);
+    }
+
+    .status-card.suspended h3 {
+      color: #EA580C;
+    }
+
+    .status-card p {
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .status-card-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .btn-status-action {
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--radius-lg);
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: none;
+    }
+
+    .btn-back-login {
+      background: var(--gray-100);
+      color: var(--gray-900);
+    }
+
+    .btn-back-login:hover {
+      background: var(--gray-200);
     }
 
     /* Login Button */
@@ -723,18 +734,17 @@
         <span id="success-text"></span>
       </div>
 
-      <!-- Account Status Block Card -->
-      <div id="status-block-card" class="status-block-card">
-        <div class="status-block-icon">
-          <span id="status-block-emoji">🚫</span>
+      <!-- Account Status Card (shown for inactive/suspended accounts) -->
+      <div id="status-card" class="status-card">
+        <div class="status-card-icon">
+          <i id="status-icon" class="fas fa-ban"></i>
         </div>
-        <h3 class="status-block-title" id="status-block-title">Account Inactive</h3>
-        <p class="status-block-message" id="status-block-message">
-          Your account has been deactivated and you cannot log in at this time.
-        </p>
-        <div class="status-block-contact">
-          <strong>Need Help?</strong><br>
-          Please contact your system administrator to reactivate your account or for more information.
+        <h3 id="status-title">Account Inactive</h3>
+        <p id="status-message">Your account is currently inactive. Please contact the administrator.</p>
+        <div class="status-card-actions">
+          <button class="btn-status-action btn-back-login" onclick="hideStatusCard()">
+            <i class="fas fa-arrow-left"></i> Back to Login
+          </button>
         </div>
       </div>
 
@@ -817,20 +827,15 @@
   function hideMessages() {
     const errorDiv = document.getElementById('error-message');
     const successDiv = document.getElementById('success-message');
-    const statusBlockCard = document.getElementById('status-block-card');
+    const statusCard = document.getElementById('status-card');
     errorDiv.style.display = 'none';
     successDiv.style.display = 'none';
-    statusBlockCard.classList.remove('show');
+    statusCard.classList.remove('show');
   }
 
   function showError(message) {
     const errorDiv = document.getElementById('error-message');
     const errorText = document.getElementById('error-text');
-    const statusBlockCard = document.getElementById('status-block-card');
-    
-    // Hide status block when showing regular error
-    statusBlockCard.classList.remove('show');
-    
     errorText.innerHTML = message;
     errorDiv.style.display = 'flex';
     // auto hide after 6s
@@ -842,11 +847,6 @@
   function showSuccess(message) {
     const successDiv = document.getElementById('success-message');
     const successText = document.getElementById('success-text');
-    const statusBlockCard = document.getElementById('status-block-card');
-    
-    // Hide status block when showing success
-    statusBlockCard.classList.remove('show');
-    
     successText.innerHTML = message;
     successDiv.style.display = 'flex';
     setTimeout(() => {
@@ -854,46 +854,41 @@
     }, 3000);
   }
 
-  function showStatusBlock(status, message) {
-    const statusBlockCard = document.getElementById('status-block-card');
-    const statusBlockTitle = document.getElementById('status-block-title');
-    const statusBlockMessage = document.getElementById('status-block-message');
-    const statusBlockEmoji = document.getElementById('status-block-emoji');
-    const errorDiv = document.getElementById('error-message');
-    const successDiv = document.getElementById('success-message');
+  function showStatusCard(status, title, message) {
+    hideMessages();
+    const statusCard = document.getElementById('status-card');
+    const statusIcon = document.getElementById('status-icon');
+    const statusTitle = document.getElementById('status-title');
+    const statusMessage = document.getElementById('status-message');
+    const loginForm = document.getElementById('login-form');
     
-    // Hide regular messages
-    errorDiv.style.display = 'none';
-    successDiv.style.display = 'none';
+    // Update content
+    statusTitle.textContent = title;
+    statusMessage.textContent = message;
     
-    // Remove previous status classes
-    statusBlockCard.classList.remove('inactive', 'suspended');
-    
-    // Configure based on status
+    // Update styling based on status
+    statusCard.classList.remove('inactive', 'suspended');
     if (status === 'inactive') {
-      statusBlockCard.classList.add('inactive');
-      statusBlockTitle.textContent = 'Account Inactive';
-      statusBlockEmoji.textContent = '🚫';
-      statusBlockMessage.textContent = message || 'Your account has been deactivated and you cannot log in at this time.';
+      statusCard.classList.add('inactive');
+      statusIcon.className = 'fas fa-ban';
     } else if (status === 'suspended') {
-      statusBlockCard.classList.add('suspended');
-      statusBlockTitle.textContent = 'Account Suspended';
-      statusBlockEmoji.textContent = '⚠️';
-      statusBlockMessage.textContent = message || 'Your account has been suspended due to administrative action.';
+      statusCard.classList.add('suspended');
+      statusIcon.className = 'fas fa-exclamation-triangle';
     }
     
-    // Show the status block card
-    statusBlockCard.classList.add('show');
-    
-    // Hide login form
-    const loginForm = document.getElementById('login-form');
+    // Show status card and hide login form
+    statusCard.classList.add('show');
     loginForm.style.display = 'none';
-    
-    // Auto-hide after 10 seconds and show form again
-    setTimeout(() => {
-      statusBlockCard.classList.remove('show');
-      loginForm.style.display = 'block';
-    }, 10000);
+  }
+
+  function hideStatusCard() {
+    const statusCard = document.getElementById('status-card');
+    const loginForm = document.getElementById('login-form');
+    statusCard.classList.remove('show');
+    loginForm.style.display = 'block';
+    // Clear form
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
   }
 
   // Toggle password visibility with icon change
@@ -1077,10 +1072,11 @@
           window.location.href = '/home';
         }, 1200);
       } else {
-        // Check if this is a status-related error
-        if (data.status && (data.status === 'inactive' || data.status === 'suspended')) {
-          // Show status block card instead of regular error
-          showStatusBlock(data.status, data.message);
+        // Check if it's a status-related error (inactive or suspended)
+        if (data.status === 'inactive') {
+          showStatusCard('inactive', 'Account Inactive', data.message || 'Your account is currently inactive. Please contact the administrator.');
+        } else if (data.status === 'suspended') {
+          showStatusCard('suspended', 'Account Suspended', data.message || 'Your account has been suspended. Please contact the administrator for assistance.');
         } else {
           // Login failed: show error from API or generic message
           const errorMsg = data.error || 'Invalid email or password. Please try again.';
