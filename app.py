@@ -626,7 +626,7 @@ def fetch_admin_by_email(email):
         f"{SUPABASE_URL}/rest/v1/admin",
         headers=SUPABASE_HEADERS,
         params={
-            'select': 'admin_id,admin_name,admin_email,access_level,admin_password',
+            'select': 'admin_id,admin_name,admin_email,access_level,admin_password,status,profile_picture',
             'admin_email': f'eq.{email}',
             'limit': 1
         },
