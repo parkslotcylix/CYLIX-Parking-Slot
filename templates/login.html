@@ -1052,6 +1052,7 @@
       let data;
       try {
         data = await response.json();
+        console.log('Login response:', data); // Debug log
       } catch(e) {
         throw new Error('Invalid server response. Please ensure Flask backend is running.');
       }
@@ -1075,15 +1076,19 @@
         // Check if it's a status-related error (inactive or suspended)
         if (data.status === 'inactive') {
           showStatusCard('inactive', 'Account Inactive', data.message || 'Your account is currently inactive. Please contact the administrator.');
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = originalBtnText;
         } else if (data.status === 'suspended') {
           showStatusCard('suspended', 'Account Suspended', data.message || 'Your account has been suspended. Please contact the administrator for assistance.');
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = originalBtnText;
         } else {
           // Login failed: show error from API or generic message
           const errorMsg = data.error || 'Invalid email or password. Please try again.';
           showError(errorMsg);
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = originalBtnText;
         }
-        loginBtn.disabled = false;
-        loginBtn.innerHTML = originalBtnText;
       }
     } catch (error) {
       console.error('Login network error:', error);
