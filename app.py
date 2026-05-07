@@ -1700,8 +1700,7 @@ def forgot_password():
             base_url = BASE_URL
         
         reset_link = f"{base_url}/reset-password?token={reset_token}"
-        print(f"📧 Sending reset email to: {admin_email} for user: {admin_name}")
-        print(f"📧 Reset link: {reset_link}")
+        print(f"📧 Preparing reset email for: {admin_email}")
         
         # Send email using the SAME user object
         subject = "Password Reset Request - ParkSlot"
@@ -1764,28 +1763,33 @@ def forgot_password():
         </html>
         """
         
-        # Send email to the user's email from the database (not from input)
-        try:
-            email_sent = send_email(admin_email, subject, html_content)
-            
-            if email_sent:
-                print(f"✅ Email sent successfully to {admin_email}")
-                return jsonify({
-                    'success': True, 
-                    'message': 'Password reset link sent to your email'
-                }), 200
-            else:
-                print(f"❌ Email sending failed for {admin_email}")
-                return jsonify({
-                    'success': False, 
-                    'error': 'Failed to send email. Please try again later.'
-                }), 500
-        except Exception as email_error:
-            print(f"❌ Email exception: {email_error}")
-            return jsonify({
-                'success': False, 
-                'error': 'Failed to send email. Please check email configuration.'
-            }), 500
+        # Return success immediately, send email in background
+        # This prevents the request from timing out
+        print(f"✅ Returning success response immediately")
+        
+        # Try to send email but don't wait for it
+        import threading
+        def send_email_async():
+            try:
+                print(f"📧 Sending reset email to: {admin_email} (background)")
+                email_sent = send_email(admin_email, subject, html_content)
+                if email_sent:
+                    print(f"✅ Email sent successfully to {admin_email}")
+                else:
+                    print(f"❌ Email sending failed for {admin_email}")
+            except Exception as e:
+                print(f"❌ Background email error: {e}")
+        
+        # Start email sending in background thread
+        email_thread = threading.Thread(target=send_email_async)
+        email_thread.daemon = True
+        email_thread.start()
+        
+        # Return success immediately
+        return jsonify({
+            'success': True, 
+            'message': 'Password reset link sent to your email'
+        }), 200
             
     except Exception as e:
         print(f"❌ Forgot password error: {e}")
