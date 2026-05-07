@@ -262,7 +262,7 @@
 /* Dropdown Header */
 .dropdown-header {
   padding: 12px; /* Reduced from 16px (25% less) */
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 50%, #1e5a3f 100%);
   color: white;
 }
 

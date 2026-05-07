@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, Response, send_from_directory
+from flask import Flask, render_template, request, jsonify, session, Response, send_from_directory, redirect, url_for
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
 
@@ -74,6 +74,9 @@ EMAIL_CONFIG = {
     'smtp_port': int(os.getenv('SMTP_PORT', 587))
 }
 
+# Base URL for password reset links (use environment variable or request host)
+BASE_URL = os.getenv('BASE_URL', 'http://localhost:5000')
+
 # Create upload folder if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -81,6 +84,57 @@ app.secret_key = os.getenv('SECRET_KEY', 'parkslot_secret_key_2026')
 
 # Enable CORS
 CORS(app, origins="*", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+# ==================== Authentication Decorator ====================
+
+def login_required(f):
+    """Decorator to require login for protected routes"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if user is logged in
+        if 'user_id' not in session or 'user_email' not in session:
+            # For API routes, return JSON error
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Authentication required'}), 401
+            # For page routes, redirect to login
+            return redirect(url_for('index'))
+        
+        # Check if account is active
+        if session.get('status') != 'active':
+            # Clear session if account is not active
+            session.clear()
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Account is not active'}), 403
+            return redirect(url_for('index'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+def super_admin_required(f):
+    """Decorator to require super admin access"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # First check if user is logged in
+        if 'user_id' not in session or 'user_email' not in session:
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Authentication required'}), 401
+            return redirect(url_for('index'))
+        
+        # Check if account is active
+        if session.get('status') != 'active':
+            session.clear()
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Account is not active'}), 403
+            return redirect(url_for('index'))
+        
+        # Check if user is super admin
+        if session.get('access_level') != 'super_admin':
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Super Admin access required'}), 403
+            return render_template('error.html', message='Access Denied: Super Admin privileges required'), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
 # ==================== Supabase REST API Wrapper ====================
 
@@ -589,6 +643,7 @@ def login():
 
 # Get all parking slots with current duration for occupied slots
 @app.route('/api/get_slots', methods=['GET', 'OPTIONS'])
+@login_required
 def get_slots():
     try:
         response = requests.get(
@@ -630,6 +685,7 @@ def get_slots():
 
 # Toggle slot status
 @app.route('/api/toggle_slot', methods=['POST', 'OPTIONS'])
+@login_required
 def toggle_slot():
     try:
         data = request.get_json()
@@ -869,6 +925,7 @@ def get_summary():
 
 # Reset all slots
 @app.route('/api/reset_slots', methods=['POST', 'OPTIONS'])
+@login_required
 def reset_slots():
     try:
         connection = get_db_connection()
@@ -996,6 +1053,7 @@ def update_slot_from_hardware():
     
 # Get parking history with calculated durations
 @app.route('/api/get_history', methods=['GET', 'OPTIONS'])
+@login_required
 def get_history():
     try:
         response = requests.get(
@@ -1068,6 +1126,7 @@ def get_history():
 
 # Get filtered parking history for reports with calculated durations
 @app.route('/api/get_history_filtered', methods=['GET', 'OPTIONS'])
+@login_required
 def get_history_filtered():
     import os
     
@@ -1082,9 +1141,24 @@ def get_history_filtered():
     try:
         filter_type = request.args.get('filter', 'today').lower()
         
+        # Check for custom date range parameters
+        custom_start = request.args.get('start_date')
+        custom_end = request.args.get('end_date')
+        
         # Calculate date filters for Supabase
         today = datetime.now(timezone.utc).date()
-        if filter_type == 'today':
+        
+        if filter_type == 'custom' and custom_start and custom_end:
+            # Use custom date range
+            try:
+                start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+                end_date = datetime.strptime(custom_end, '%Y-%m-%d').date() + timedelta(days=1)
+                print(f"Custom date range: {start_date} to {end_date}")
+            except ValueError:
+                # Invalid date format, fall back to today
+                start_date = today
+                end_date = today + timedelta(days=1)
+        elif filter_type == 'today':
             start_date = today
             end_date = today + timedelta(days=1)
         elif filter_type == 'yesterday':
@@ -1210,6 +1284,7 @@ def get_rates():
 
 # Analytics - Total Revenue
 @app.route('/api/analytics/revenue', methods=['GET', 'OPTIONS'])
+@login_required
 def analytics_revenue():
     try:
         connection = get_db_connection()
@@ -1247,6 +1322,7 @@ def analytics_revenue():
 
 # Analytics - Parking Sessions
 @app.route('/api/analytics/sessions', methods=['GET', 'OPTIONS'])
+@login_required
 def analytics_sessions():
     try:
         connection = get_db_connection()
@@ -1305,6 +1381,7 @@ def analytics_sessions():
 
 # Analytics - Hourly Statistics
 @app.route('/api/analytics/hourly', methods=['GET', 'OPTIONS'])
+@login_required
 def analytics_hourly():
     try:
         connection = get_db_connection()
@@ -1371,6 +1448,7 @@ def analytics_hourly():
 
 # Analytics - Occupancy Rate (real-time occupied vs total slots)
 @app.route('/api/analytics/occupancy', methods=['GET', 'OPTIONS'])
+@login_required
 def analytics_occupancy():
     try:
         connection = get_db_connection()
@@ -1436,55 +1514,85 @@ def analytics_occupancy():
 
 # Change admin password
 @app.route('/api/change_password', methods=['POST', 'OPTIONS'])
+@login_required
 def change_password():
     try:
         if request.method == 'OPTIONS':
-            return '', 200
+            return '', 204
         
         data = request.get_json()
-        admin_id = data.get('admin_id')
         current_password = data.get('current_password')
         new_password = data.get('new_password')
         
-        connection = get_db_connection()
-        if connection is None:
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
+        if not current_password or not new_password:
+            return jsonify({'success': False, 'error': 'Current and new passwords are required'}), 400
         
-        try:
-            cursor = get_db_cursor(connection)
-            
-            # Get current admin password
-            cursor.execute("SELECT admin_password FROM admin WHERE admin_id = %s", (admin_id,))
-            result = cursor.fetchone()
-            
-            if not result:
-                cursor.close()
-                return jsonify({'success': False, 'error': 'Admin not found'}), 404
-            
-            # For simple verification (in production, use proper hashing)
-            if result['admin_password'] != current_password:
-                cursor.close()
-                return jsonify({'success': False, 'error': 'Current password is incorrect'}), 401
-            
-            # Update password
-            cursor.execute(
-                "UPDATE admin SET admin_password = %s WHERE admin_id = %s",
-                (new_password, admin_id)
-            )
-            connection.commit()
-            
+        if len(new_password) < 6:
+            return jsonify({'success': False, 'error': 'New password must be at least 6 characters long'}), 400
+        
+        # Get current user's admin_id from session
+        admin_id = session.get('user_id')
+        if not admin_id:
+            return jsonify({'success': False, 'error': 'User session invalid'}), 401
+        
+        # Get current admin password using Supabase REST API
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers=SUPABASE_HEADERS,
+            params={
+                'select': 'admin_password',
+                'admin_id': f'eq.{admin_id}',
+                'limit': 1
+            },
+            timeout=10
+        )
+        
+        if response.status_code != 200:
+            return jsonify({'success': False, 'error': 'Failed to verify current password'}), 500
+        
+        admins = response.json()
+        if not admins:
+            return jsonify({'success': False, 'error': 'Admin not found'}), 404
+        
+        # Verify current password
+        if admins[0]['admin_password'] != current_password:
+            return jsonify({'success': False, 'error': 'Current password is incorrect'}), 401
+        
+        # Update password
+        update_response = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            params={'admin_id': f'eq.{admin_id}'},
+            json={
+                'admin_password': new_password,
+                'updated_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            },
+            timeout=10
+        )
+        
+        if update_response.status_code in [200, 204]:
             # Log the action
-            cursor.execute(
-                "INSERT INTO admin_logs (admin_id, action, description) VALUES (%s, %s, %s)",
-                (admin_id, 'change_password', 'Admin changed their password')
-            )
-            connection.commit()
-            cursor.close()
+            try:
+                requests.post(
+                    f"{SUPABASE_URL}/rest/v1/admin_logs",
+                    headers=SUPABASE_HEADERS,
+                    json={
+                        'admin_id': admin_id,
+                        'action': 'change_password',
+                        'description': 'Admin changed their password',
+                        'created_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+                    },
+                    timeout=10
+                )
+            except:
+                pass  # Log action is optional
             
             return jsonify({'success': True, 'message': 'Password changed successfully'})
-        finally:
-            connection.close()
+        else:
+            return jsonify({'success': False, 'error': f'Failed to update password: {update_response.text}'}), 500
+            
     except Exception as e:
+        print(f"Change password error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Forgot password handler
@@ -1500,115 +1608,171 @@ def forgot_password():
         if not email:
             return jsonify({'success': False, 'error': 'Email is required'}), 400
         
-        connection = get_db_connection()
-        if connection is None:
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
+        # Fetch user directly from Supabase using the provided email
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers=SUPABASE_HEADERS,
+            params={
+                'admin_email': f'eq.{email}',
+                'select': 'admin_id,admin_email,admin_name'
+            },
+            timeout=10
+        )
+        
+        if response.status_code != 200:
+            return jsonify({'success': False, 'error': 'Database query failed'}), 500
+        
+        users = response.json()
+        
+        if not users or len(users) == 0:
+            # For security, don't reveal if email exists or not
+            return jsonify({
+                'success': True, 
+                'message': 'If an account exists with this email, a password reset link will be sent'
+            }), 200
+        
+        # Get the user record - use the SAME user object for everything
+        user = users[0]
+        admin_id = user['admin_id']
+        admin_email = user['admin_email']  # Use email from database, not from input
+        admin_name = user['admin_name']    # Use name from database
+        
+        # Generate reset token
+        reset_token = generate_reset_token()
+        
+        # Store token in database with expiration (30 minutes)
+        expiration_time = datetime.now(timezone.utc) + timedelta(minutes=30)
         
         try:
-            cursor = get_db_cursor(connection)
+            token_response = requests.post(
+                f"{SUPABASE_URL}/rest/v1/password_reset_tokens",
+                headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+                json={
+                    'admin_id': admin_id,
+                    'token': reset_token,
+                    'expires_at': expiration_time.strftime('%Y-%m-%d %H:%M:%S')
+                },
+                timeout=10
+            )
+            print(f"✅ Reset token stored: {reset_token[:10]}... for admin_id: {admin_id}, name: {admin_name}")
+        except Exception as e:
+            print(f"⚠️  Error storing reset token: {e}")
+            # Continue anyway - token will be generated but not stored
+        
+        # Create reset link using request host or BASE_URL
+        if request.host:
+            protocol = 'https' if request.is_secure else 'http'
+            base_url = f"{protocol}://{request.host}"
+        else:
+            base_url = BASE_URL
+        
+        reset_link = f"{base_url}/reset-password?token={reset_token}"
+        print(f"📧 Sending reset email to: {admin_email} for user: {admin_name}")
+        print(f"📧 Reset link: {reset_link}")
+        
+        # Send email using the SAME user object
+        subject = "Password Reset Request - ParkSlot"
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+                    <tr>
+                        <td align="center">
+                            <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%); padding: 30px; text-align: center;">
+                                        <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">ParkSlot</h1>
+                                        <p style="color: #e8f5e9; margin: 5px 0 0 0; font-size: 14px;">Smart Parking Management System</p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Content -->
+                                <tr>
+                                    <td style="padding: 40px 30px;">
+                                        <h2 style="color: #1a4731; margin: 0 0 20px 0; font-size: 24px;">Password Reset Request</h2>
+                                        <p style="color: #333333; line-height: 1.6; margin: 0 0 15px 0;">Hello <strong>{admin_name}</strong>,</p>
+                                        <p style="color: #333333; line-height: 1.6; margin: 0 0 25px 0;">We received a request to reset your password. Click the button below to reset it:</p>
+                                        
+                                        <!-- Button -->
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td align="center" style="padding: 20px 0;">
+                                                    <a href="{reset_link}" style="background-color: #1a4731; color: #ffffff; padding: 14px 40px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;">Reset Password</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <div style="background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 25px 0; border-radius: 4px;">
+                                            <p style="color: #e65100; margin: 0; font-weight: bold; font-size: 14px;">⏰ This link will expire in 30 minutes.</p>
+                                        </div>
+                                        
+                                        <p style="color: #666666; line-height: 1.6; margin: 20px 0 0 0; font-size: 14px;">If you didn't request a password reset, please ignore this email.</p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="background-color: #f9f9f9; padding: 20px 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                                        <p style="color: #999999; margin: 0; font-size: 12px;">© 2026 ParkSlot. All rights reserved.</p>
+                                        <p style="color: #999999; margin: 5px 0 0 0; font-size: 11px;">This is a system-generated email. Please do not reply.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+        </html>
+        """
+        
+        # Send email to the user's email from the database (not from input)
+        email_sent = send_email(admin_email, subject, html_content)
+        
+        if email_sent:
+            return jsonify({
+                'success': True, 
+                'message': 'Password reset link sent to your email'
+            }), 200
+        else:
+            return jsonify({
+                'success': False, 
+                'error': 'Failed to send email. Please try again later.'
+            }), 500
             
-            # Check if email exists
-            cursor.execute("SELECT admin_id, admin_email, admin_name FROM admin WHERE admin_email = %s", (email,))
-            result = cursor.fetchone()
-            
-            if not result:
-                # For security, don't reveal if email exists or not
-                return jsonify({
-                    'success': True, 
-                    'message': 'If an account exists with this email, a password reset link will be sent'
-                }), 200
-            
-            # Generate reset token
-            reset_token = generate_reset_token()
-            admin_id = result['admin_id']
-            admin_name = result['admin_name']
-            
-            # Store token in database with expiration (30 minutes)
-            expiration_time = datetime.now() + timedelta(minutes=30)
-            
-            try:
-                cursor.execute(
-                    "INSERT INTO password_reset_tokens (admin_id, token, expires_at) VALUES (%s, %s, %s)",
-                    (admin_id, reset_token, expiration_time.strftime('%Y-%m-%d %H:%M:%S'))
-                )
-                connection.commit()
-                print(f"✅ Reset token stored: {reset_token[:10]}... for admin_id: {admin_id}")
-            except Exception as e:
-                print(f"⚠️  Error storing reset token: {e}")
-                # Continue anyway - token will be generated but not stored
-            
-            # Create reset link
-            reset_link = f"http://localhost:5000/reset-password?token={reset_token}"
-            print(f"📧 Reset link: {reset_link}")
-            
-            # Send email
-            subject = "Password Reset Request - ParkSlot"
-            html_content = f"""
-            <html>
-                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <h2 style="color: #1B4D3E;">Password Reset Request</h2>
-                        <p>Hello {admin_name},</p>
-                        <p>We received a request to reset your password. Click the button below to reset it:</p>
-                        <div style="text-align: center; margin: 30px 0;">
-                            <a href="{reset_link}" style="background-color: #1B4D3E; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                                Reset Password
-                            </a>
-                        </div>
-                        <p>Or copy and paste this link in your browser:</p>
-                        <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 3px;">
-                            {reset_link}
-                        </p>
-                        <p><strong>This link will expire in 30 minutes.</strong></p>
-                        <p>If you didn't request a password reset, please ignore this email.</p>
-                        <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                        <p style="font-size: 12px; color: #666;">
-                            © 2026 ParkSlot. All rights reserved.
-                        </p>
-                    </div>
-                </body>
-            </html>
-            """
-            
-            email_sent = send_email(email, subject, html_content)
-            cursor.close()
-            
-            if email_sent:
-                return jsonify({
-                    'success': True, 
-                    'message': 'Password reset link sent to your email'
-                }), 200
-            else:
-                return jsonify({
-                    'success': False, 
-                    'error': 'Failed to send email. Please try again later.'
-                }), 500
-            
-        finally:
-            connection.close()
     except Exception as e:
         print(f"Forgot password error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Upload admin profile picture
 @app.route('/api/upload_profile_picture', methods=['POST', 'OPTIONS'])
+@login_required
 def upload_profile_picture():
     try:
         if request.method == 'OPTIONS':
-            return '', 200
+            return '', 204
         
         # Check if file exists in request
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
         
         file = request.files['file']
-        admin_id = request.form.get('admin_id')
         
         if file.filename == '':
             return jsonify({'success': False, 'error': 'No file selected'}), 400
         
         if not allowed_file(file.filename):
             return jsonify({'success': False, 'error': 'Invalid file type. Allowed: png, jpg, jpeg, gif, webp'}), 400
+        
+        # Get current user's admin_id from session
+        admin_id = session.get('user_id')
+        if not admin_id:
+            return jsonify({'success': False, 'error': 'User session invalid'}), 401
         
         # Read file content
         file_content = file.read()
@@ -1620,126 +1784,167 @@ def upload_profile_picture():
         ext = file.filename.rsplit('.', 1)[1].lower()
         filename = f"admin_{admin_id}_{int(time.time())}.{ext}"
         
-        # Upload to Supabase Storage
-        storage_path = f"profile-pictures/{filename}"
+        # Save file locally
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        with open(file_path, 'wb') as f:
+            f.write(file_content)
         
-        try:
-            # Upload file to Supabase Storage using REST API
-            upload_url = f"{SUPABASE_URL}/storage/v1/object/avatars/{storage_path}"
-            
-            upload_headers = {
-                'Authorization': f'Bearer {SUPABASE_API_KEY}',
-                'Content-Type': f'image/{ext}',
-                'apikey': SUPABASE_API_KEY
-            }
-            
-            upload_response = requests.post(
-                upload_url,
-                headers=upload_headers,
-                data=file_content,
-                timeout=30
-            )
-            
-            if upload_response.status_code not in [200, 201]:
-                error_detail = upload_response.text
-                print(f"Supabase storage upload failed: {upload_response.status_code} - {error_detail}")
-                
-                # Provide helpful error messages
-                if upload_response.status_code == 404:
-                    return jsonify({
-                        'success': False, 
-                        'error': 'Storage bucket "avatars" not found. Please create it in Supabase Dashboard.',
-                        'details': 'Go to Storage → Create bucket named "avatars" (public)'
-                    }), 500
-                elif upload_response.status_code == 403:
-                    return jsonify({
-                        'success': False, 
-                        'error': 'Permission denied. Please set storage policies in Supabase.',
-                        'details': 'Go to Storage → avatars → Policies and add the required policies'
-                    }), 500
-                else:
-                    return jsonify({
-                        'success': False, 
-                        'error': f'Storage upload failed: {error_detail}',
-                        'status_code': upload_response.status_code
-                    }), 500
-            
-            # Get public URL
-            picture_url = f"{SUPABASE_URL}/storage/v1/object/public/avatars/{storage_path}"
-            
-        except Exception as storage_error:
-            print(f"Storage error: {storage_error}")
-            import traceback
-            traceback.print_exc()
-            return jsonify({
-                'success': False, 
-                'error': f'Storage upload exception: {str(storage_error)}',
-                'hint': 'Check if Supabase Storage bucket "avatars" exists and is public'
-            }), 500
+        # Generate public URL
+        picture_url = f'/static/images/profiles/{filename}'
         
-        # Update database with new picture URL
-        try:
-            update_resp = requests.patch(
-                f"{SUPABASE_URL}/rest/v1/admin",
-                headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
-                params={'admin_id': f'eq.{admin_id}'},
-                json={'profile_picture': picture_url},
-                timeout=10
-            )
-            
-            if update_resp.status_code not in [200, 204]:
-                return jsonify({'success': False, 'error': 'Failed to update database'}), 500
+        # Update database with new picture URL using Supabase REST API
+        update_response = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            params={'admin_id': f'eq.{admin_id}'},
+            json={
+                'profile_picture': picture_url,
+                'updated_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+            },
+            timeout=10
+        )
+        
+        if update_response.status_code in [200, 204]:
+            # Update session data
+            session['profile_picture'] = picture_url
             
             return jsonify({
                 'success': True,
-                'picture_url': picture_url,
-                'message': 'Profile picture updated successfully'
+                'message': 'Profile picture updated successfully',
+                'picture_url': picture_url
             })
-            
-        except Exception as db_error:
-            print(f"Database update error: {db_error}")
-            return jsonify({'success': False, 'error': 'Database update failed'}), 500
+        else:
+            # Delete the uploaded file if database update fails
+            try:
+                os.remove(file_path)
+            except:
+                pass
+            return jsonify({'success': False, 'error': f'Database update failed: {update_response.text}'}), 500
             
     except Exception as e:
-        print(f"Upload error: {e}")
+        print(f"Upload profile picture error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Get admin information
 @app.route('/api/get_admin', methods=['GET', 'OPTIONS'])
+@login_required
 def get_admin():
     try:
-        connection = get_db_connection()
-        if connection is None:
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
-        
-        try:
-            cursor = get_db_cursor(connection)
-            cursor.execute(
-                "SELECT admin_id, admin_name, admin_email, access_level, status, profile_picture FROM admin WHERE admin_id = %s",
-                (1,)
-            )
-            admin = cursor.fetchone()
-            cursor.close()
+        if request.method == 'OPTIONS':
+            return '', 204
             
-            if admin:
+        # Get current user's admin_id from session
+        admin_id = session.get('user_id')
+        if not admin_id:
+            return jsonify({'success': False, 'error': 'User session invalid'}), 401
+        
+        # Query admin data using Supabase REST API
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers=SUPABASE_HEADERS,
+            params={
+                'select': 'admin_id,admin_name,admin_email,access_level,status,profile_picture',
+                'admin_id': f'eq.{admin_id}',
+                'limit': 1
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            admins = response.json()
+            if admins:
+                admin = admins[0]
                 return jsonify({'success': True, 'admin': admin})
             else:
                 return jsonify({'success': False, 'error': 'Admin not found'}), 404
-        finally:
-            connection.close()
+        else:
+            return jsonify({'success': False, 'error': f'Database query failed: {response.text}'}), 500
+            
     except Exception as e:
+        print(f"Get admin error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# Check current session (for access control)
-@app.route('/api/check_session', methods=['GET'])
-def check_session():
+# Logout endpoint
+@app.route('/api/logout', methods=['POST', 'OPTIONS'])
+def logout():
+    """Clear server-side session and log out the user"""
     try:
-        if 'user_id' not in session:
+        if request.method == 'OPTIONS':
+            return '', 204
+        
+        # Get user info before clearing session
+        admin_id = session.get('user_id')
+        admin_email = session.get('user_email')
+        admin_name = session.get('user_name')
+        
+        # Log the logout action
+        logout_timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        print(f"\n{'='*60}")
+        print(f"🚪 LOGOUT EVENT - {logout_timestamp}")
+        print(f"{'='*60}")
+        print(f"Admin ID: {admin_id}")
+        print(f"Admin Name: {admin_name}")
+        print(f"Admin Email: {admin_email}")
+        print(f"Session cleared: True")
+        print(f"{'='*60}\n")
+        
+        # Try to log to database
+        if admin_id:
+            try:
+                requests.post(
+                    f"{SUPABASE_URL}/rest/v1/admin_logs",
+                    headers=SUPABASE_HEADERS,
+                    json={
+                        'admin_id': admin_id,
+                        'action': 'logout',
+                        'description': f'User {admin_email} logged out',
+                        'created_at': logout_timestamp
+                    },
+                    timeout=10
+                )
+            except Exception as log_error:
+                print(f"⚠️ Failed to log logout to database: {log_error}")
+        
+        # Clear all session data
+        session.clear()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Logged out successfully'
+        })
+    except Exception as e:
+        print(f"Logout error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Logout redirect route
+@app.route('/logout')
+def logout_redirect():
+    """Clear session and redirect to login page"""
+    session.clear()
+    return redirect(url_for('index'))
+
+# Session check endpoint
+@app.route('/api/check_session', methods=['GET', 'OPTIONS'])
+def check_session():
+    """Check if user session is valid"""
+    try:
+        if request.method == 'OPTIONS':
+            return '', 204
+        
+        # Check if user is logged in
+        if 'user_id' not in session or 'user_email' not in session:
             return jsonify({
-                'success': False,
-                'logged_in': False,
-                'message': 'Not logged in'
-            }), 401
+                'success': True,
+                'logged_in': False
+            })
+        
+        # Check if account is active
+        if session.get('status') != 'active':
+            session.clear()
+            return jsonify({
+                'success': True,
+                'logged_in': False
+            })
         
         return jsonify({
             'success': True,
@@ -1752,25 +1957,7 @@ def check_session():
             'profile_picture': session.get('profile_picture', '/static/images/default-profile.png')
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# Logout endpoint
-@app.route('/api/logout', methods=['POST', 'OPTIONS'])
-def logout():
-    """Clear server-side session and log out the user"""
-    try:
-        if request.method == 'OPTIONS':
-            return '', 204
-        
-        # Clear all session data
-        session.clear()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Logged out successfully'
-        })
-    except Exception as e:
-        print(f"Logout error: {e}")
+        print(f"Session check error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Test Supabase Storage connection
@@ -1828,8 +2015,12 @@ def test_storage():
         }), 500
 
 @app.route('/api/update_admin_info', methods=['POST', 'OPTIONS'])
+@login_required
 def update_admin_info():
     try:
+        if request.method == 'OPTIONS':
+            return '', 204
+            
         data = request.get_json()
         admin_name = data.get('admin_name', '').strip()
         admin_email = data.get('admin_email', '').strip()
@@ -1840,23 +2031,37 @@ def update_admin_info():
         if not admin_email or '@' not in admin_email:
             return jsonify({'success': False, 'error': 'Valid email is required'}), 400
         
-        connection = get_db_connection()
-        if connection is None:
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
+        # Get current user's admin_id from session
+        admin_id = session.get('user_id')
+        if not admin_id:
+            return jsonify({'success': False, 'error': 'User session invalid'}), 401
         
-        try:
-            cursor = get_db_cursor(connection)
-            cursor.execute(
-                "UPDATE admin SET admin_name = %s, admin_email = %s WHERE admin_id = %s",
-                (admin_name, admin_email, 1)
-            )
-            connection.commit()
-            cursor.close()
+        # Update admin using Supabase REST API
+        update_data = {
+            'admin_name': admin_name,
+            'admin_email': admin_email,
+            'updated_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        response = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            params={'admin_id': f'eq.{admin_id}'},
+            json=update_data,
+            timeout=10
+        )
+        
+        if response.status_code in [200, 204]:
+            # Update session data
+            session['user_name'] = admin_name
+            session['user_email'] = admin_email
             
             return jsonify({'success': True, 'message': 'Admin information updated successfully'})
-        finally:
-            connection.close()
+        else:
+            return jsonify({'success': False, 'error': f'Update failed: {response.text}'}), 500
+            
     except Exception as e:
+        print(f"Update admin info error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Serve HTML pages
@@ -1874,36 +2079,29 @@ def favicon():
     )
 
 @app.route('/home')
+@login_required
 def home():
     return render_template('home.html')
 
 @app.route('/parking')
+@login_required
 def parking():
     return render_template('parking.html')
 
 @app.route('/analytics')
+@login_required
 def analytics():
     return render_template('analytics.html')
 
 @app.route('/account')
+@login_required
 def account():
     return render_template('account.html')
 
 # Admin Management Page (Super Admin Only)
 @app.route('/admin-management')
+@super_admin_required
 def admin_management():
-    # Check if user is logged in
-    if 'user_id' not in session:
-        return render_template('error.html', message='Please login to access this page'), 401
-    
-    # Check if user is super admin
-    if session.get('access_level') != 'super_admin':
-        return render_template('error.html', message='Access Denied: Only Super Admins can access this page'), 403
-    
-    # Check if account is active
-    if session.get('status') != 'active':
-        return render_template('error.html', message='Your account is not active'), 403
-    
     return render_template('admin_management.html')
 
 # ============================================
@@ -1912,16 +2110,9 @@ def admin_management():
 
 # Get all admins (super_admin only)
 @app.route('/api/get_all_admins', methods=['GET'])
+@super_admin_required
 def get_all_admins():
     try:
-        # Check if user is logged in
-        if 'user_id' not in session:
-            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
-        
-        # Check if user is super admin
-        if session.get('access_level') != 'super_admin':
-            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
-        
         response = requests.get(
             f"{SUPABASE_URL}/rest/v1/admin",
             headers=SUPABASE_HEADERS,
@@ -1941,16 +2132,9 @@ def get_all_admins():
 
 # Create new admin (super_admin only)
 @app.route('/api/create_admin', methods=['POST'])
+@super_admin_required
 def create_admin():
     try:
-        # Check if user is logged in
-        if 'user_id' not in session:
-            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
-        
-        # Check if user is super admin
-        if session.get('access_level') != 'super_admin':
-            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
-        
         data = request.get_json()
         
         # Validate required fields
@@ -2013,16 +2197,9 @@ def create_admin():
 
 # Update admin details (super_admin only)
 @app.route('/api/update_admin', methods=['POST'])
+@super_admin_required
 def update_admin():
     try:
-        # Check if user is logged in
-        if 'user_id' not in session:
-            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
-        
-        # Check if user is super admin
-        if session.get('access_level') != 'super_admin':
-            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
-        
         data = request.get_json()
         admin_id = data.get('admin_id')
         
@@ -2053,9 +2230,22 @@ def update_admin():
         )
         
         if update_response.status_code in [200, 204]:
+            # Fetch the updated admin record
+            get_response = requests.get(
+                f"{SUPABASE_URL}/rest/v1/admin",
+                headers=SUPABASE_HEADERS,
+                params={'admin_id': f'eq.{admin_id}', 'select': '*'},
+                timeout=10
+            )
+            
+            updated_admin = None
+            if get_response.status_code == 200 and len(get_response.json()) > 0:
+                updated_admin = get_response.json()[0]
+            
             return jsonify({
                 'success': True,
-                'message': 'Admin updated successfully'
+                'message': 'Admin updated successfully',
+                'admin': updated_admin
             })
         else:
             return jsonify({'success': False, 'error': 'Failed to update admin'}), 500
@@ -2066,16 +2256,9 @@ def update_admin():
 
 # Delete admin (super_admin only)
 @app.route('/api/delete_admin', methods=['POST'])
+@super_admin_required
 def delete_admin():
     try:
-        # Check if user is logged in
-        if 'user_id' not in session:
-            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
-        
-        # Check if user is super admin
-        if session.get('access_level') != 'super_admin':
-            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
-        
         data = request.get_json()
         admin_id = data.get('admin_id')
         
@@ -2097,7 +2280,8 @@ def delete_admin():
         if delete_response.status_code in [200, 204]:
             return jsonify({
                 'success': True,
-                'message': 'Admin deleted successfully'
+                'message': 'Admin deleted successfully',
+                'admin_id': admin_id
             })
         else:
             return jsonify({'success': False, 'error': 'Failed to delete admin'}), 500
@@ -2108,16 +2292,9 @@ def delete_admin():
 
 # Reset admin password (super_admin only)
 @app.route('/api/reset_admin_password', methods=['POST'])
+@super_admin_required
 def reset_admin_password():
     try:
-        # Check if user is logged in
-        if 'user_id' not in session:
-            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
-        
-        # Check if user is super admin
-        if session.get('access_level') != 'super_admin':
-            return jsonify({'success': False, 'error': 'Access Denied: Super Admin only'}), 403
-        
         data = request.get_json()
         admin_id = data.get('admin_id')
         new_password = data.get('new_password')
@@ -2147,28 +2324,35 @@ def reset_admin_password():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Update admin profile with picture upload (super_admin only)
-@app.route('/api/update_admin_profile', methods=['POST'])
+@app.route('/api/update_admin_profile', methods=['POST', 'OPTIONS'])
+@super_admin_required
 def update_admin_profile():
     try:
-        # Check if user is logged in and is super_admin
-        if 'user_id' not in session:
-            return jsonify({'success': False, 'error': 'Unauthorized: Please login'}), 401
-        
-        if session.get('access_level') != 'super_admin':
-            return jsonify({'success': False, 'error': 'Access Denied: Super Admin privileges required'}), 403
-        
+        if request.method == 'OPTIONS':
+            return '', 204
+            
         admin_id = request.form.get('admin_id')
         admin_name = request.form.get('admin_name')
         admin_email = request.form.get('admin_email')
+        access_level = request.form.get('access_level')
+        status = request.form.get('status')
         
         if not admin_id or not admin_name or not admin_email:
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
-        connection = get_db_connection()
-        if connection is None:
-            return jsonify({'success': False, 'error': 'Database connection failed'}), 500
+        # Validate email format
+        if '@' not in admin_email:
+            return jsonify({'success': False, 'error': 'Invalid email address'}), 400
         
-        cursor = get_db_cursor(connection)
+        # Validate access level
+        valid_access_levels = ['super_admin', 'admin', 'manager']
+        if access_level and access_level not in valid_access_levels:
+            return jsonify({'success': False, 'error': 'Invalid access level'}), 400
+        
+        # Validate status
+        valid_statuses = ['active', 'inactive', 'suspended']
+        if status and status not in valid_statuses:
+            return jsonify({'success': False, 'error': 'Invalid status'}), 400
         
         # Handle profile picture upload
         profile_picture_url = None
@@ -2188,33 +2372,73 @@ def update_admin_profile():
                 timestamp = str(int(time.time()))
                 filename = f"{admin_id}_{timestamp}_{filename}"
                 
-                # Save file
+                # Save file locally
                 file_path = os.path.join(UPLOAD_FOLDER, filename)
                 file.save(file_path)
                 
                 # Set profile picture URL
                 profile_picture_url = f'/static/images/profiles/{filename}'
         
-        # Update admin profile
+        # Prepare update data
+        update_data = {
+            'admin_name': admin_name,
+            'admin_email': admin_email,
+            'updated_at': datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        }
+        
+        # Add password if provided
+        admin_password = request.form.get('admin_password')
+        if admin_password:
+            update_data['admin_password'] = admin_password
+        
+        # Add access level if provided
+        if access_level:
+            update_data['access_level'] = access_level
+        
+        # Add status if provided
+        if status:
+            update_data['status'] = status
+        
+        # Add profile picture if uploaded
         if profile_picture_url:
-            cursor.execute(
-                "UPDATE admin SET admin_name = %s, admin_email = %s, profile_picture = %s, updated_at = CURRENT_TIMESTAMP WHERE admin_id = %s",
-                (admin_name, admin_email, profile_picture_url, admin_id)
+            update_data['profile_picture'] = profile_picture_url
+        
+        # Update admin profile using Supabase REST API
+        update_response = requests.patch(
+            f"{SUPABASE_URL}/rest/v1/admin",
+            headers={**SUPABASE_HEADERS, 'Prefer': 'return=representation'},
+            params={'admin_id': f'eq.{admin_id}'},
+            json=update_data,
+            timeout=10
+        )
+        
+        if update_response.status_code in [200, 204]:
+            # Fetch the updated admin record
+            get_response = requests.get(
+                f"{SUPABASE_URL}/rest/v1/admin",
+                headers=SUPABASE_HEADERS,
+                params={'admin_id': f'eq.{admin_id}', 'select': '*'},
+                timeout=10
             )
+            
+            updated_admin = None
+            if get_response.status_code == 200 and len(get_response.json()) > 0:
+                updated_admin = get_response.json()[0]
+            
+            return jsonify({
+                'success': True,
+                'message': 'Profile updated successfully',
+                'picture_url': profile_picture_url,
+                'admin': updated_admin
+            })
         else:
-            cursor.execute(
-                "UPDATE admin SET admin_name = %s, admin_email = %s, updated_at = CURRENT_TIMESTAMP WHERE admin_id = %s",
-                (admin_name, admin_email, admin_id)
-            )
-        
-        cursor.close()
-        connection.close()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Profile updated successfully',
-            'profile_picture': profile_picture_url
-        })
+            # Delete uploaded file if database update fails
+            if profile_picture_url:
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+            return jsonify({'success': False, 'error': f'Failed to update profile: {update_response.text}'}), 500
         
     except Exception as e:
         print(f"Update admin profile error: {e}")

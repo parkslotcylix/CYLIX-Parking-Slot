@@ -3,7 +3,7 @@
 {% block title %}Smart Parking Slot - Account{% endblock %}
 
 {% block extra_css %}
-  <style>
+<style>
     :root {
       --green-dark: #1a4731;
       --green-mid: #2d6a4f;
@@ -29,86 +29,7 @@
       min-height: 100vh;
     }
 
-    /* NAV */
-    nav {
-      background: #1F2B26;
-      padding: 0 48px;
-      height: 68px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 1.2rem;
-      color: var(--white);
-      text-decoration: none;
-    }
-
-    .nav-logo-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .nav-logo-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 36px;
-      list-style: none;
-    }
-
-    .nav-links a {
-      color: rgba(255,255,255,0.8);
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 0.88rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      transition: color 0.2s;
-      cursor: pointer;
-      position: relative;
-      display: inline-block;
-    }
-
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: #F7C85C;
-      transition: width 0.3s ease;
-    }
-
-    .nav-links a:hover::after,
-    .nav-links a.active::after {
-      width: 100%;
-    }
-
-    .nav-links a:hover,
-    .nav-links a.active {
-      color: var(--white);
-    }
+    /* NAV - Remove duplicate navbar styles since we're using the centralized navbar */
 
     /* ========== ACCOUNT PAGE ========== */
     #page-account {
@@ -252,12 +173,17 @@
       outline: none;
       cursor: text;
       transition: background 0.2s;
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .info-input:focus {
       background: rgba(127, 183, 126, 0.1);
       border-radius: 4px;
       padding: 2px 6px;
+      max-width: 100%;
     }
 
     .info-input::placeholder {
@@ -268,7 +194,8 @@
       width: 100%;
       display: flex;
       justify-content: flex-end;
-      margin-top: 20px;
+      gap: 12px;
+      margin-top: 24px;
       padding: 0 20px;
       max-width: 1200px;
     }
@@ -332,20 +259,42 @@
 
     .btn-report:hover { background: var(--green-mid); }
 
-    .btn-logout {
-      flex: 1;
-      background: #fce4ec;
-      color: #c62828;
-      border: 2px solid #ef9a9a;
-      border-radius: 12px;
-      padding: 18px;
+    .btn-save {
+      background: #7FB77E;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 24px;
       font-family: 'Nunito', sans-serif;
-      font-weight: 800;
-      font-size: 0.95rem;
+      font-weight: 700;
+      font-size: 0.85rem;
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      transition: background 0.2s;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-save:hover { background: #6a9968; }
+
+    .btn-logout {
+      background: #fce4ec;
+      color: #c62828;
+      border: 1.5px solid #ef9a9a;
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-transform: uppercase;
       transition: all 0.2s;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-logout:hover { background: #ef9a9a; color: white; }
@@ -580,20 +529,11 @@
 
     /* ========== RESPONSIVE DESIGN ========== */
     @media (max-width: 1024px) {
-      nav { padding: 0 32px; }
       #page-account { padding: 20px 32px 32px 32px; margin: 12px 20px 24px 20px; }
       .acc-content { gap: 24px; }
     }
 
     @media (max-width: 768px) {
-      nav {
-        padding: 0 20px;
-        height: 60px;
-      }
-
-      .nav-logo { font-size: 1rem; }
-      .nav-links { gap: 20px; font-size: 0.75rem; }
-
       #page-account {
         padding: 16px 20px 24px 20px;
         margin: 12px 16px 20px 16px;
@@ -627,9 +567,14 @@
       .badge-full { font-size: 0.75rem; padding: 3px 8px; }
       .change-pw-btn { font-size: 0.8rem; }
 
-      .btn-save {
-        padding: 8px 16px;
+      .btn-save, .btn-logout {
+        padding: 10px 16px;
         font-size: 0.8rem;
+        height: 40px;
+      }
+
+      .button-container {
+        gap: 10px;
       }
 
       .modal-content {
@@ -648,30 +593,6 @@
     }
 
     @media (max-width: 480px) {
-      nav {
-        padding: 0 12px;
-        height: 56px;
-      }
-
-      .nav-logo { gap: 6px; font-size: 0.9rem; }
-      .nav-logo-icon { width: 32px; height: 32px; }
-
-      .nav-links {
-        gap: 12px;
-        font-size: 0.7rem;
-        position: absolute;
-        left: 0;
-        top: 56px;
-        flex-direction: column;
-        background: #1F2B26;
-        width: 100%;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        display: none;
-      }
-
-      .nav-links.active { display: flex; }
-
       #page-account {
         padding: 12px 12px 20px 12px;
         text-align: center;
@@ -714,10 +635,15 @@
       .badge-full { font-size: 0.7rem; padding: 3px 6px; }
       .change-pw-btn { font-size: 0.75rem; }
 
-      .btn-save {
-        width: 100%;
-        padding: 10px;
+      .btn-save, .btn-logout {
+        padding: 8px 12px;
         font-size: 0.75rem;
+        height: 36px;
+      }
+
+      .button-container {
+        gap: 8px;
+        padding: 0 12px;
       }
 
       .modal {
@@ -755,98 +681,7 @@
 {% endblock %}
 
 {% block content %}
-<nav class="navbar">
-  <!-- Left Section: Logo + Navigation Grouped -->
-  <div class="navbar-left">
-    <!-- Logo/Brand -->
-    <a href="/home" class="navbar-brand">
-      <div class="navbar-logo">
-        <img src="/static/images/logo.png" alt="ParkSlot Logo"/>
-      </div>
-      ParkSlot
-    </a>
 
-    <!-- Navigation Links - Tightly Grouped -->
-    <ul class="navbar-nav">
-      <li><a href="/home">Home</a></li>
-      <li><a href="/analytics">Report</a></li>
-      <li><a href="/parking">Parking</a></li>
-      <li><a href="/admin-management">Admin Management</a></li>
-    </ul>
-  </div>
-
-  <!-- Mobile Hamburger Toggle -->
-  <button class="navbar-toggle" id="navbarToggle" aria-label="Toggle navigation">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-
-  <!-- Right Section: Profile Only -->
-  <div class="navbar-right">
-    <div class="navbar-profile">
-      <div class="profile-trigger" id="profileTrigger">
-        <div class="profile-avatar-container">
-          <img src="/static/images/default-profile.png" class="profile-avatar" id="profileAvatar" alt="Profile">
-          <div class="profile-initials" id="profileInitials">A</div>
-        </div>
-        <span class="profile-name" id="profileName">Admin User</span>
-        <span class="dropdown-arrow">▼</span>
-      </div>
-      <div class="dropdown-menu" id="dropdownMenu">
-        <div class="dropdown-header">
-          <div class="dropdown-admin-name" id="dropdownAdminName">Admin User</div>
-          <div class="dropdown-admin-email" id="dropdownAdminEmail">admin@example.com</div>
-          <div class="dropdown-badges">
-            <span id="dropdownRoleBadge"></span>
-            <span id="dropdownStatusBadge"></span>
-          </div>
-        </div>
-        <div class="dropdown-body">
-          <a href="/account" class="dropdown-item">
-            <span>👤</span>
-            <span>My Account</span>
-          </a>
-          <a href="/account" class="dropdown-item">
-            <span>⚙️</span>
-            <span>Account Settings</span>
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" onclick="handleLogout(event)" class="dropdown-item logout">
-            <span>🚪</span>
-            <span>Logout</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile Menu -->
-  <div class="navbar-mobile-menu" id="navbarMobileMenu">
-    <!-- Mobile Navigation Links -->
-    <ul class="mobile-nav-links">
-      <li><a href="/home">Home</a></li>
-      <li><a href="/analytics">Report</a></li>
-      <li><a href="/parking">Parking</a></li>
-      <li><a href="/admin-management">Admin Management</a></li>
-    </ul>
-
-    <!-- Mobile Profile Section -->
-    <div class="mobile-profile-section">
-      <div class="mobile-profile-info">
-        <div class="mobile-profile-avatar" id="mobileProfileAvatar">A</div>
-        <div class="mobile-profile-name" id="mobileProfileName">Admin User</div>
-        <div class="mobile-profile-email" id="mobileProfileEmail">admin@example.com</div>
-        <div class="mobile-profile-badges" id="mobileProfileBadges">
-          <!-- Badges will be populated by JavaScript -->
-        </div>
-      </div>
-      <div class="mobile-profile-actions">
-        <a href="/account" class="mobile-profile-btn primary">👤 My Account</a>
-        <a href="/account" class="mobile-profile-btn primary">⚙️ Account Settings</a>
-        <a href="#" onclick="handleLogout(event)" class="mobile-profile-btn danger">🚪 Logout</a>
-      </div>
-    </div>
 <!-- ========== ACCOUNT ========== -->
 <section id="page-account">
   <div class="account-avatar-container">
@@ -891,6 +726,7 @@
 
   <div class="button-container">
     <button class="btn-save" onclick="saveAdminInfo()">💾 Save Information</button>
+    <button class="btn-logout" onclick="handleLogout(event)">🚪 Logout</button>
   </div>
 </section>
 
@@ -963,35 +799,9 @@
           document.getElementById('admin-name').value = data.admin.admin_name || 'Administrator';
           document.getElementById('admin-email').value = data.admin.admin_email || 'admin@smartparking.com';
           
-          // Load profile picture with error handling
-          const profileImg = document.getElementById('admin-profile-pic');
-          const defaultAvatar = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%237FB77E' width='100' height='100'/%3E%3Ccircle cx='50' cy='35' r='20' fill='%23fff'/%3E%3Cpath d='M 15 75 Q 15 60 50 60 Q 85 60 85 75 L 85 100 L 15 100 Z' fill='%23fff'/%3E%3C/svg%3E";
-          
-          // Set error handler BEFORE setting src
-          profileImg.onerror = function() {
-            console.warn('Profile picture not found:', data.admin.profile_picture);
-            this.src = defaultAvatar;
-            this.onerror = null; // Prevent infinite loop
-            
-            // Update database to use default profile picture
-            fetch(`${API_BASE}/update_admin_info`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                admin_id: data.admin.admin_id,
-                profile_picture: '/static/images/default-profile.png'
-              })
-            }).catch(err => console.error('Failed to update profile picture:', err));
-          };
-          
-          // Only try to load if it's not the default or if it looks like a valid path
-          if (data.admin.profile_picture && 
-              data.admin.profile_picture !== '' &&
-              data.admin.profile_picture !== '/static/images/default-profile.png') {
-            profileImg.src = data.admin.profile_picture;
-          } else {
-            // Use default avatar
-            profileImg.src = defaultAvatar;
+          // Load profile picture only if it exists
+          if (data.admin.profile_picture && data.admin.profile_picture !== '') {
+            document.getElementById('admin-profile-pic').src = data.admin.profile_picture;
           }
           
           const levelText = data.admin.access_level === 'super_admin' ? 'Super Admin' : 
@@ -1066,12 +876,11 @@
       return;
     }
 
-    // API call to change password (encrypted transmission via HTTPS in production)
+    // API call to change password
     fetch(`${API_BASE}/change_password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        admin_id: currentAdmin.admin_id,
         current_password: currentPw,
         new_password: newPw
       })
@@ -1152,7 +961,6 @@
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('admin_id', currentAdmin.admin_id);
     
     // Show loading state
     const profileImg = document.getElementById('admin-profile-pic');
@@ -1185,12 +993,6 @@
     event.target.value = '';
   }
 
-  // Load on page load
-  document.addEventListener('DOMContentLoaded', () => {
-    checkAuthentication();
-    loadAdminInfo();
-  });
-
   // Authentication check
   function checkAuthentication() {
     const userEmail = sessionStorage.getItem('user_email');
@@ -1198,6 +1000,57 @@
       window.location.href = '/';
     }
   }
+
+  // Logout function
+  async function handleLogout(event) {
+    if (event) event.preventDefault();
+    
+    if (confirm('Are you sure you want to logout?')) {
+      try {
+        // Call backend logout endpoint to clear Flask session
+        const response = await fetch(`${API_BASE}/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Log the logout action to console
+          console.log('✅ Logout successful - Session cleared');
+          console.log('Timestamp:', new Date().toISOString());
+          
+          // Clear all client-side storage
+          sessionStorage.clear();
+          localStorage.clear();
+          
+          // Show success notification
+          showNotification('✓ Logged Out', 'You have been successfully logged out', 'success');
+          
+          // Redirect to login page after a short delay
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        } else {
+          showNotification('Error', 'Logout failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Even if API call fails, clear local storage and redirect
+        console.log('⚠️ Logout API error, clearing local storage and redirecting');
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = '/';
+      }
+    }
+  }
+
+  // Load on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    checkAuthentication();
+    loadAdminInfo();
+  });
 
   // Close modal when clicking outside
   window.onclick = function(event) {
