@@ -80,6 +80,12 @@ EMAIL_CONFIG = {
 # Base URL for password reset links (use environment variable or request host)
 BASE_URL = os.getenv('BASE_URL', 'http://localhost:5000')
 
+# ==================== 2FA Verification Code Storage ====================
+# Structure: {email: {'code': '123456', 'expires_at': timestamp, 'failed_attempts': 0}}
+VERIFICATION_CODES = {}
+VERIFICATION_CODE_EXPIRATION = 300  # 5 minutes in seconds
+MAX_FAILED_ATTEMPTS = 5
+
 # Create upload folder if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -543,6 +549,89 @@ def generate_reset_token(length=32):
     characters = string.ascii_letters + string.digits
     return ''.join(secrets.choice(characters) for _ in range(length))
 
+# ==================== 2FA Verification Code Functions ====================
+
+def generate_verification_code(length=6):
+    """Generate a random 6-digit verification code"""
+    return ''.join(secrets.choice(string.digits) for _ in range(length))
+
+def send_verification_code(email, code):
+    """Send verification code to admin email"""
+    try:
+        html_content = f"""
+        <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #0B2B26 0%, #1B4D3E 100%); padding: 40px; border-radius: 15px;">
+            <div style="background: white; padding: 40px; border-radius: 10px; text-align: center;">
+                <h2 style="color: #0B2B26; margin-bottom: 20px;">ParkSlot - Login Verification</h2>
+                
+                <p style="color: #666; font-size: 16px; margin-bottom: 30px;">Your login verification code is:</p>
+                
+                <div style="background: linear-gradient(135deg, #0B2B26 0%, #1B4D3E 100%); padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+                    <code style="color: #E8A020; font-size: 48px; font-weight: bold; letter-spacing: 10px;">{code}</code>
+                </div>
+                
+                <p style="color: #999; font-size: 14px; margin-bottom: 10px;">This code will expire in 5 minutes.</p>
+                <p style="color: #999; font-size: 14px; margin-bottom: 20px;">If you didn't request this code, please ignore this email.</p>
+                
+                <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
+                    <p style="color: #999; font-size: 12px;">© 2026 ParkSlot. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+        """
+        
+        subject = f"ParkSlot Login Verification - {code}"
+        return send_email(email, subject, html_content)
+        
+    except Exception as e:
+        print(f"Error sending verification code: {e}")
+        return False
+
+def generate_and_send_verification_code(email):
+    """Generate a verification code and send it to admin email"""
+    code = generate_verification_code()
+    expires_at = time.time() + VERIFICATION_CODE_EXPIRATION
+    
+    # Store code with expiration and failed attempts counter
+    VERIFICATION_CODES[email] = {
+        'code': code,
+        'expires_at': expires_at,
+        'failed_attempts': 0
+    }
+    
+    # Send code via email
+    if send_verification_code(email, code):
+        print(f"✅ Verification code sent to {email}")
+        return True
+    else:
+        print(f"❌ Failed to send verification code to {email}")
+        return False
+
+def verify_code(email, code):
+    """Verify the provided code"""
+    if email not in VERIFICATION_CODES:
+        return False, "No verification code found. Please log in again."
+    
+    stored_data = VERIFICATION_CODES[email]
+    
+    # Check if code has expired
+    if time.time() > stored_data['expires_at']:
+        del VERIFICATION_CODES[email]
+        return False, "Verification code expired. Please request a new one."
+    
+    # Check if too many failed attempts
+    if stored_data['failed_attempts'] >= MAX_FAILED_ATTEMPTS:
+        del VERIFICATION_CODES[email]
+        return False, "Too many failed attempts. Please log in again."
+    
+    # Check if code matches
+    if stored_data['code'] != code.strip():
+        stored_data['failed_attempts'] += 1
+        return False, f"Invalid verification code. ({stored_data['failed_attempts']}/{MAX_FAILED_ATTEMPTS})"
+    
+    # Code is valid, remove it
+    del VERIFICATION_CODES[email]
+    return True, "Code verified successfully"
+
 # Camera stream proxy endpoint
 @app.route('/api/camera/stream')
 def camera_stream():
@@ -674,6 +763,25 @@ def login():
                     'status': 'suspended'
                 }), 403
             
+            # Check if admin or super admin - require 2FA
+            access_level = admin.get('access_level', '').lower()
+            if access_level in ['admin', 'super admin']:
+                # Generate and send verification code
+                if generate_and_send_verification_code(email):
+                    return jsonify({
+                        'success': True,
+                        'message': 'Verification code sent to your email',
+                        'requires_verification': True,
+                        'admin_email': admin['admin_email'],
+                        'admin_name': admin['admin_name']
+                    }), 200
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to send verification code. Please try again.'
+                    }), 500
+            
+            # For other access levels (if any), allow direct login
             # Store session data
             session['user_email'] = admin['admin_email']
             session['user_id'] = admin['admin_id']
@@ -697,6 +805,120 @@ def login():
             
     except Exception as e:
         print(f"Login error: {e}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+
+# Verify 2FA code endpoint
+@app.route('/api/verify-code', methods=['POST', 'OPTIONS'])
+def verify_login_code():
+    """Verify the 2FA code and complete login"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        code = data.get('code', '')
+        
+        if not email or not code:
+            return jsonify({'success': False, 'error': 'Email and code are required'}), 400
+        
+        # Verify the code
+        is_valid, message = verify_code(email, code)
+        
+        if not is_valid:
+            return jsonify({
+                'success': False,
+                'error': message
+            }), 401
+        
+        # Code is valid, fetch admin and complete login
+        try:
+            admin = fetch_admin_by_email(email)
+            if not admin:
+                return jsonify({
+                    'success': False,
+                    'error': 'Admin not found'
+                }), 404
+            
+            # Store session data
+            session['user_email'] = admin['admin_email']
+            session['user_id'] = admin['admin_id']
+            session['user_name'] = admin['admin_name']
+            session['access_level'] = admin['access_level']
+            session['status'] = admin.get('status', 'active')
+            session['profile_picture'] = admin.get('profile_picture', '/static/images/default-profile.png')
+            
+            return jsonify({
+                'success': True,
+                'message': 'Login successful',
+                'admin_id': admin['admin_id'],
+                'admin_name': admin['admin_name'],
+                'admin_email': admin['admin_email'],
+                'access_level': admin['access_level'],
+                'status': admin.get('status', 'active'),
+                'profile_picture': admin.get('profile_picture', '/static/images/default-profile.png')
+            }), 200
+        except Exception as e:
+            print(f"Error during code verification: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to complete login'
+            }), 500
+            
+    except Exception as e:
+        print(f"Verify code error: {e}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+
+# Resend verification code endpoint
+@app.route('/api/resend-code', methods=['POST', 'OPTIONS'])
+def resend_verification_code():
+    """Resend the 2FA verification code to admin email"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip()
+        
+        if not email:
+            return jsonify({'success': False, 'error': 'Email is required'}), 400
+        
+        # Check if admin exists
+        try:
+            admin = fetch_admin_by_email(email)
+            if not admin:
+                return jsonify({
+                    'success': False,
+                    'error': 'Admin not found'
+                }), 404
+            
+            # Only allow resend if it's admin or super admin
+            access_level = admin.get('access_level', '').lower()
+            if access_level not in ['admin', 'super admin']:
+                return jsonify({
+                    'success': False,
+                    'error': 'Verification code resend not allowed for this account'
+                }), 403
+            
+            # Remove old code if exists
+            if email in VERIFICATION_CODES:
+                del VERIFICATION_CODES[email]
+            
+            # Generate and send new code
+            if generate_and_send_verification_code(email):
+                return jsonify({
+                    'success': True,
+                    'message': 'Verification code resent to your email'
+                }), 200
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to resend verification code'
+                }), 500
+                
+        except Exception as e:
+            print(f"Error during resend: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to resend code'
+            }), 500
+            
+    except Exception as e:
+        print(f"Resend code error: {e}")
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 # Get all parking slots with current duration for occupied slots

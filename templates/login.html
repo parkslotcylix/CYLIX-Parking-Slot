@@ -679,6 +679,176 @@
         font-size: 1.4rem;
       }
     }
+
+    /* Verification Code Form Styles */
+    .verification-form {
+      display: none;
+    }
+
+    .verification-form.show {
+      display: block;
+    }
+
+    .verification-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .verification-header h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+
+    .verification-header p {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .code-input-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .code-input-container {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .code-digit {
+      width: 3rem;
+      height: 3rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      font-family: monospace;
+      transition: all 0.2s ease;
+      background: var(--gray-50);
+    }
+
+    .code-digit:focus {
+      outline: none;
+      border-color: var(--primary-light);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(42, 122, 98, 0.1);
+    }
+
+    .code-digit.filled {
+      background: linear-gradient(135deg, #2A7A62 0%, #1B4D3E 100%);
+      color: white;
+      border-color: var(--primary-light);
+    }
+
+    .code-timer {
+      text-align: center;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #FFF7ED 0%, #FFFFFF 100%);
+      border: 1px solid #FED7AA;
+      border-radius: var(--radius-lg);
+      color: #EA580C;
+      font-weight: 600;
+    }
+
+    .code-timer.expired {
+      background: linear-gradient(135deg, #FEF2F2 0%, #FFFFFF 100%);
+      border-color: #FECACA;
+      color: var(--error-text);
+    }
+
+    .code-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .verify-btn {
+      flex: 1;
+      padding: 0.9rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .verify-btn:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(27, 77, 62, 0.3);
+    }
+
+    .verify-btn:active {
+      transform: translateY(0);
+    }
+
+    .verify-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .resend-btn {
+      flex: 1;
+      padding: 0.9rem;
+      background: white;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius-lg);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .resend-btn:hover:not(:disabled) {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(27, 77, 62, 0.2);
+    }
+
+    .resend-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .back-to-login {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .back-to-login a {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .back-to-login a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -816,6 +986,51 @@
           <span>Access Dashboard</span>
         </button>
       </form>
+
+      <!-- Verification Code Form -->
+      <div id="verification-form" class="verification-form">
+        <div class="verification-header">
+          <h2>Verify Your Identity</h2>
+          <p>Enter the 6-digit code sent to your email address</p>
+        </div>
+
+        <div id="verification-messages">
+          <!-- Error/Success messages will appear here -->
+        </div>
+
+        <div class="code-input-group">
+          <div class="code-input-container">
+            <input type="text" class="code-digit" id="digit1" maxlength="1" inputmode="numeric" />
+            <input type="text" class="code-digit" id="digit2" maxlength="1" inputmode="numeric" />
+            <input type="text" class="code-digit" id="digit3" maxlength="1" inputmode="numeric" />
+            <input type="text" class="code-digit" id="digit4" maxlength="1" inputmode="numeric" />
+            <input type="text" class="code-digit" id="digit5" maxlength="1" inputmode="numeric" />
+            <input type="text" class="code-digit" id="digit6" maxlength="1" inputmode="numeric" />
+          </div>
+        </div>
+
+        <div class="code-timer" id="codeTimer">
+          <i class="fas fa-hourglass-end"></i>
+          <span id="timerText">Code expires in: <strong>5:00</strong></span>
+        </div>
+
+        <div class="code-actions">
+          <button type="button" class="verify-btn" id="verifyBtn" onclick="handleVerifyCode(event)">
+            <i class="fas fa-check"></i>
+            <span>Verify Code</span>
+          </button>
+          <button type="button" class="resend-btn" id="resendBtn" onclick="handleResendCode(event)">
+            <i class="fas fa-redo"></i>
+            <span>Resend Code</span>
+          </button>
+        </div>
+
+        <div class="back-to-login">
+          <a onclick="backToLogin()">
+            <i class="fas fa-arrow-left"></i> Back to Login
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1058,20 +1273,27 @@
       }
       
       if (response.ok && data.success) {
-        // Store session data
-        sessionStorage.setItem('user_email', data.admin_email || email);
-        sessionStorage.setItem('user_id', data.admin_id || 1);
-        sessionStorage.setItem('user_name', data.admin_name || 'Administrator');
-        sessionStorage.setItem('access_level', data.access_level || 'admin');
-        sessionStorage.setItem('status', data.status || 'active');
-        sessionStorage.setItem('profile_picture', data.profile_picture || '/static/images/default-profile.png');
-        
-        showSuccess('Authentication successful! Redirecting to dashboard...');
-        
-        // Redirect after short delay
-        setTimeout(() => {
-          window.location.href = '/home';
-        }, 1200);
+        // Check if 2FA verification is required
+        if (data.requires_verification) {
+          showVerificationForm(email, data.admin_name);
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = originalBtnText;
+        } else {
+          // Store session data
+          sessionStorage.setItem('user_email', data.admin_email || email);
+          sessionStorage.setItem('user_id', data.admin_id || 1);
+          sessionStorage.setItem('user_name', data.admin_name || 'Administrator');
+          sessionStorage.setItem('access_level', data.access_level || 'admin');
+          sessionStorage.setItem('status', data.status || 'active');
+          sessionStorage.setItem('profile_picture', data.profile_picture || '/static/images/default-profile.png');
+          
+          showSuccess('Authentication successful! Redirecting to dashboard...');
+          
+          // Redirect after short delay
+          setTimeout(() => {
+            window.location.href = '/home';
+          }, 1200);
+        }
       } else {
         // Check if it's a status-related error (inactive or suspended)
         if (data.status === 'inactive') {
@@ -1104,10 +1326,287 @@
     }
   }
   
+  // ==================== 2FA VERIFICATION CODE FUNCTIONS ====================
+  
+  let verificationEmail = '';
+  let verificationTimer = null;
+  let verificationExpiryTime = 0;
+
+  function showVerificationForm(email, adminName) {
+    verificationEmail = email;
+    hideMessages();
+    
+    const loginForm = document.getElementById('login-form');
+    const verificationForm = document.getElementById('verification-form');
+    
+    loginForm.style.display = 'none';
+    verificationForm.classList.add('show');
+    
+    // Focus on first digit input
+    setTimeout(() => {
+      document.getElementById('digit1').focus();
+    }, 100);
+    
+    // Start the countdown timer (5 minutes)
+    startVerificationTimer();
+    
+    // Setup code input listeners
+    setupCodeInputListeners();
+  }
+
+  function setupCodeInputListeners() {
+    const digits = ['digit1', 'digit2', 'digit3', 'digit4', 'digit5', 'digit6'];
+    
+    digits.forEach((id, index) => {
+      const input = document.getElementById(id);
+      
+      input.addEventListener('input', (e) => {
+        const value = e.target.value;
+        
+        // Only allow digits
+        if (!/^\d*$/.test(value)) {
+          e.target.value = '';
+          return;
+        }
+        
+        // Auto-move to next field
+        if (value.length === 1 && index < digits.length - 1) {
+          document.getElementById(digits[index + 1]).focus();
+        }
+        
+        // Update filled state
+        if (value) {
+          e.target.classList.add('filled');
+        } else {
+          e.target.classList.remove('filled');
+        }
+      });
+      
+      input.addEventListener('keydown', (e) => {
+        // Backspace - move to previous field
+        if (e.key === 'Backspace' && !input.value && index > 0) {
+          document.getElementById(digits[index - 1]).focus();
+        }
+        
+        // Enter - submit
+        if (e.key === 'Enter') {
+          handleVerifyCode(e);
+        }
+        
+        // Arrow keys for navigation
+        if (e.key === 'ArrowLeft' && index > 0) {
+          document.getElementById(digits[index - 1]).focus();
+        }
+        if (e.key === 'ArrowRight' && index < digits.length - 1) {
+          document.getElementById(digits[index + 1]).focus();
+        }
+      });
+    });
+  }
+
+  function startVerificationTimer() {
+    const EXPIRY_SECONDS = 300; // 5 minutes
+    verificationExpiryTime = Date.now() + EXPIRY_SECONDS * 1000;
+    
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, Math.floor((verificationExpiryTime - now) / 1000));
+      
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+      const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      
+      const timerElement = document.getElementById('timerText');
+      const timerContainer = document.getElementById('codeTimer');
+      
+      timerElement.innerHTML = `Code expires in: <strong>${timeStr}</strong>`;
+      
+      if (remaining === 0) {
+        clearInterval(verificationTimer);
+        timerContainer.classList.add('expired');
+        timerElement.innerHTML = '<strong>Code Expired</strong> - Please request a new code';
+        document.getElementById('verifyBtn').disabled = true;
+        document.getElementById('digit1').disabled = true;
+        document.getElementById('digit2').disabled = true;
+        document.getElementById('digit3').disabled = true;
+        document.getElementById('digit4').disabled = true;
+        document.getElementById('digit5').disabled = true;
+        document.getElementById('digit6').disabled = true;
+      }
+    };
+    
+    updateTimer(); // Initial call
+    verificationTimer = setInterval(updateTimer, 1000);
+  }
+
+  function getCodeFromInputs() {
+    const digits = ['digit1', 'digit2', 'digit3', 'digit4', 'digit5', 'digit6'];
+    return digits.map(id => document.getElementById(id).value).join('');
+  }
+
+  function clearCodeInputs() {
+    const digits = ['digit1', 'digit2', 'digit3', 'digit4', 'digit5', 'digit6'];
+    digits.forEach(id => {
+      const input = document.getElementById(id);
+      input.value = '';
+      input.classList.remove('filled');
+    });
+  }
+
+  function showVerificationMessage(message, isError = false) {
+    const messagesDiv = document.getElementById('verification-messages');
+    const messageClass = isError ? 'message-box error' : 'message-box success';
+    const icon = isError ? 'fa-exclamation-circle' : 'fa-check-circle';
+    
+    messagesDiv.innerHTML = `
+      <div class="${messageClass}">
+        <i class="fas ${icon}"></i>
+        <span>${message}</span>
+      </div>
+    `;
+    
+    // Auto-hide success messages
+    if (!isError) {
+      setTimeout(() => {
+        messagesDiv.innerHTML = '';
+      }, 3000);
+    }
+  }
+
+  async function handleVerifyCode(event) {
+    event.preventDefault();
+    
+    const code = getCodeFromInputs();
+    
+    if (code.length !== 6) {
+      showVerificationMessage('Please enter all 6 digits', true);
+      return;
+    }
+    
+    const verifyBtn = document.getElementById('verifyBtn');
+    const originalText = verifyBtn.innerHTML;
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Verifying...';
+    
+    try {
+      const response = await fetch(`${API_BASE}/verify-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          code: code
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        // Store session data
+        sessionStorage.setItem('user_email', data.admin_email || verificationEmail);
+        sessionStorage.setItem('user_id', data.admin_id || 1);
+        sessionStorage.setItem('user_name', data.admin_name || 'Administrator');
+        sessionStorage.setItem('access_level', data.access_level || 'admin');
+        sessionStorage.setItem('status', data.status || 'active');
+        sessionStorage.setItem('profile_picture', data.profile_picture || '/static/images/default-profile.png');
+        
+        showVerificationMessage('Code verified! Redirecting to dashboard...');
+        clearInterval(verificationTimer);
+        
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 1500);
+      } else {
+        showVerificationMessage(data.error || 'Verification failed. Please try again.', true);
+        clearCodeInputs();
+        document.getElementById('digit1').focus();
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      showVerificationMessage('Cannot connect to server. Please try again.', true);
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = originalText;
+    }
+  }
+
+  async function handleResendCode(event) {
+    event.preventDefault();
+    
+    const resendBtn = document.getElementById('resendBtn');
+    const originalText = resendBtn.innerHTML;
+    resendBtn.disabled = true;
+    resendBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
+    
+    try {
+      const response = await fetch(`${API_BASE}/resend-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: verificationEmail
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        showVerificationMessage('New code sent to your email!');
+        clearCodeInputs();
+        document.getElementById('digit1').focus();
+        
+        // Restart timer
+        clearInterval(verificationTimer);
+        startVerificationTimer();
+        
+        // Re-enable verify button
+        document.getElementById('verifyBtn').disabled = false;
+        
+        // Disable resend button for a few seconds
+        setTimeout(() => {
+          resendBtn.disabled = false;
+          resendBtn.innerHTML = originalText;
+        }, 3000);
+      } else {
+        showVerificationMessage(data.error || 'Failed to resend code. Please try again.', true);
+        resendBtn.disabled = false;
+        resendBtn.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Resend error:', error);
+      showVerificationMessage('Cannot connect to server. Please try again.', true);
+      resendBtn.disabled = false;
+      resendBtn.innerHTML = originalText;
+    }
+  }
+
+  function backToLogin() {
+    clearInterval(verificationTimer);
+    verificationEmail = '';
+    
+    const loginForm = document.getElementById('login-form');
+    const verificationForm = document.getElementById('verification-form');
+    
+    verificationForm.classList.remove('show');
+    loginForm.style.display = 'block';
+    
+    clearCodeInputs();
+    document.getElementById('verification-messages').innerHTML = '';
+    document.getElementById('email').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('email').focus();
+  }
+  
   // Expose globally for inline handlers
   window.handleLogin = handleLogin;
   window.togglePasswordVisibility = togglePasswordVisibility;
   window.handleForgotPassword = handleForgotPassword;
+  window.handleVerifyCode = handleVerifyCode;
+  window.handleResendCode = handleResendCode;
+  window.backToLogin = backToLogin;
 </script>
 </body>
 </html>
