@@ -63,10 +63,68 @@ function refreshSharedProfileUI() {
 window.refreshSharedProfileUI = refreshSharedProfileUI;
 
 /**
+ * Fetch user data from server and update profile picture if available
+ * Ensures profile picture persists even after session storage is cleared
+ */
+function fetchAndUpdateProfilePicture() {
+  const userEmail = sessionStorage.getItem('user_email');
+  
+  // Only fetch if user is logged in
+  if (!userEmail) {
+    return;
+  }
+  
+  fetch(`${API_BASE}/api/me`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    }
+    throw new Error('Failed to fetch user data');
+  })
+  .then(data => {
+    if (data.success && data.admin) {
+      // Update session storage with latest data from server
+      const profilePicture = data.admin.profile_picture || '/static/images/default-profile.png';
+      sessionStorage.setItem('profile_picture', profilePicture);
+      
+      // Update UI with latest profile picture
+      const profileAvatar = document.getElementById('profileAvatar');
+      if (profileAvatar) {
+        profileAvatar.src = profilePicture;
+        profileAvatar.style.display = profilePicture ? 'block' : 'none';
+      }
+      
+      const profileInitials = document.getElementById('profileInitials');
+      if (profileInitials && profilePicture === '/static/images/default-profile.png') {
+        const adminName = sessionStorage.getItem('user_name') || 'Admin User';
+        profileInitials.textContent = getInitials(adminName);
+        profileInitials.style.display = 'flex';
+      } else if (profileInitials) {
+        profileInitials.style.display = 'none';
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error updating profile picture:', error);
+    // Silently fail - use sessionStorage data if available
+  });
+}
+
+/**
  * Initialize the profile dropdown component
  */
 function initializeProfileDropdown() {
+  // First refresh from session storage
   refreshSharedProfileUI();
+  
+  // Then fetch latest user data from server to ensure profile picture is current
+  fetchAndUpdateProfilePicture();
 
   // Setup dropdown toggle
   const profileTrigger = document.getElementById('profileTrigger');
