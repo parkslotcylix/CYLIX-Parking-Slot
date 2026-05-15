@@ -765,9 +765,14 @@ def login():
             
             # Check if admin or super admin - require 2FA
             access_level = admin.get('access_level', '').lower()
-            if access_level in ['admin', 'super admin']:
+            print(f"DEBUG LOGIN: Email={email}, AccessLevel='{access_level}'")
+            print(f"DEBUG LOGIN: Raw access_level from DB: '{admin.get('access_level')}'")
+            
+            if access_level in ['admin', 'super admin', 'super_admin']:
+                print(f"DEBUG LOGIN: 2FA required for {email}")
                 # Generate and send verification code
                 if generate_and_send_verification_code(email):
+                    print(f"DEBUG LOGIN: Code sent successfully to {email}")
                     return jsonify({
                         'success': True,
                         'message': 'Verification code sent to your email',
@@ -776,11 +781,13 @@ def login():
                         'admin_name': admin['admin_name']
                     }), 200
                 else:
+                    print(f"DEBUG LOGIN: Failed to send code to {email}")
                     return jsonify({
                         'success': False,
                         'error': 'Failed to send verification code. Please try again.'
                     }), 500
             
+            print(f"DEBUG LOGIN: 2FA not required for {email} (access_level: {access_level}). Direct login allowed.")
             # For other access levels (if any), allow direct login
             # Store session data
             session['user_email'] = admin['admin_email']
