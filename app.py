@@ -763,12 +763,12 @@ def login():
                     'status': 'suspended'
                 }), 403
             
-            # Check if admin or super admin - require 2FA
+            # Check if admin - require 2FA for all admin access levels
             access_level = admin.get('access_level', '').lower()
             print(f"DEBUG LOGIN: Email={email}, AccessLevel='{access_level}'")
             print(f"DEBUG LOGIN: Raw access_level from DB: '{admin.get('access_level')}'")
             
-            if access_level in ['admin', 'super admin', 'super_admin']:
+            if access_level in ['admin', 'super_admin', 'manager']:
                 print(f"DEBUG LOGIN: 2FA required for {email}")
                 # Generate and send verification code
                 if generate_and_send_verification_code(email):
