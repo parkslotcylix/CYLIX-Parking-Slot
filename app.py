@@ -7,6 +7,7 @@ import requests
 import threading
 import os
 import time
+import re
 from werkzeug.utils import secure_filename
 import smtplib
 from email.mime.text import MIMEText
@@ -2235,6 +2236,10 @@ def create_admin():
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'success': False, 'error': f'{field} is required'}), 400
+
+        # Validate name format
+        if not re.fullmatch(r"[A-Za-z ]+", data['admin_name'].strip()):
+            return jsonify({'success': False, 'error': 'Admin name can only contain letters and spaces'}), 400
         
         # Validate email format
         if '@' not in data['admin_email']:
@@ -2394,6 +2399,8 @@ def update_admin():
         # Build update object (only include provided fields)
         update_data = {}
         if 'admin_name' in data:
+            if not re.fullmatch(r"[A-Za-z ]+", str(data['admin_name']).strip()):
+                return jsonify({'success': False, 'error': 'Admin name can only contain letters and spaces'}), 400
             update_data['admin_name'] = data['admin_name']
         if 'admin_email' in data:
             # Validate email domain if email is being updated
@@ -2527,6 +2534,10 @@ def update_admin_profile():
         
         if not admin_id or not admin_name or not admin_email:
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+
+        # Validate name format
+        if not re.fullmatch(r"[A-Za-z ]+", admin_name.strip()):
+            return jsonify({'success': False, 'error': 'Admin name can only contain letters and spaces'}), 400
         
         # Validate email format
         if '@' not in admin_email:

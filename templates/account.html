@@ -689,7 +689,7 @@
     <button class="upload-btn" onclick="document.getElementById('profile-pic-input').click()" title="Upload Profile Picture">+</button>
     <input type="file" id="profile-pic-input" accept="image/*" style="display:none;" onchange="uploadProfilePicture(event)"/>
   </div>
-  <h1>Admin Dashboard</h1>
+  <h1>Admin Account</h1>
   <p class="acc-sub">Manage parking lot system and operations</p>
 
   <hr class="acc-divider"/>
@@ -798,15 +798,27 @@
           document.getElementById('admin-id').textContent = '#' + String(data.admin.admin_id).padStart(4, '0');
           document.getElementById('admin-name').value = data.admin.admin_name || 'Administrator';
           document.getElementById('admin-email').value = data.admin.admin_email || 'admin@smartparking.com';
+
+          sessionStorage.setItem('user_name', data.admin.admin_name || 'Administrator');
+          sessionStorage.setItem('user_email', data.admin.admin_email || 'admin@smartparking.com');
+          sessionStorage.setItem('access_level', data.admin.access_level || 'admin');
+          sessionStorage.setItem('status', data.admin.status || 'active');
           
           // Load profile picture only if it exists
           if (data.admin.profile_picture && data.admin.profile_picture !== '') {
             document.getElementById('admin-profile-pic').src = data.admin.profile_picture;
+            sessionStorage.setItem('profile_picture', data.admin.profile_picture);
+          } else {
+            sessionStorage.removeItem('profile_picture');
           }
           
           const levelText = data.admin.access_level === 'super_admin' ? 'Super Admin' : 
                           data.admin.access_level === 'manager' ? 'Manager' : 'Admin';
           document.getElementById('admin-level').textContent = '🔒 ' + levelText;
+
+          if (typeof window.refreshSharedProfileUI === 'function') {
+            window.refreshSharedProfileUI();
+          }
         }
       })
       .catch(error => console.error('Error loading admin info:', error));
@@ -929,6 +941,13 @@
       if (data.success) {
         currentAdmin.admin_name = adminName;
         currentAdmin.admin_email = adminEmail;
+        sessionStorage.setItem('user_name', adminName);
+        sessionStorage.setItem('user_email', adminEmail);
+
+        if (typeof window.refreshSharedProfileUI === 'function') {
+          window.refreshSharedProfileUI();
+        }
+
         showNotification('✓ Saved', 'Admin information updated successfully!', 'success');
       } else {
         showNotification('Error', data.error || 'Failed to save information', 'error');
@@ -977,6 +996,12 @@
         // Update the image with the new URL
         profileImg.src = data.picture_url + '?t=' + new Date().getTime();
         currentAdmin.profile_picture = data.picture_url;
+        sessionStorage.setItem('profile_picture', data.picture_url);
+
+        if (typeof window.refreshSharedProfileUI === 'function') {
+          window.refreshSharedProfileUI();
+        }
+
         showNotification('✓ Success', 'Profile picture updated successfully!', 'success');
       } else {
         profileImg.src = originalSrc;

@@ -719,7 +719,10 @@
       
       <div class="form-group">
         <label>Full Name *</label>
-        <input type="text" id="adminName" required placeholder="Enter full name"/>
+        <input type="text" id="adminName" required placeholder="Enter full name" oninput="validateAdminNameField()" pattern="[A-Za-z ]+" title="Only letters and spaces are allowed"/>
+        <small id="adminNameError" style="display: none; color: #d32f2f; font-size: 0.75rem; margin-top: 4px;">
+          Admin name can only contain letters and spaces
+        </small>
       </div>
       
       <div class="form-group">
@@ -1202,6 +1205,25 @@
     };
   }
 
+  function validateAdminName(name) {
+    return /^[A-Za-z ]+$/.test(name.trim());
+  }
+
+  function validateAdminNameField() {
+    const nameInput = document.getElementById('adminName');
+    const errorMessage = document.getElementById('adminNameError');
+
+    if (!nameInput || !errorMessage) {
+      return true;
+    }
+
+    const value = nameInput.value.trim();
+    const isValid = value.length > 0 && validateAdminName(value);
+
+    errorMessage.style.display = isValid || value.length === 0 ? 'none' : 'block';
+    return isValid;
+  }
+
   // Show password requirements
   function showPasswordRequirements(password) {
     const validation = validatePasswordStrength(password);
@@ -1242,6 +1264,14 @@
         // Validate inputs
         if (!adminData.admin_name) {
           showNotification('Admin name is required', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+
+        if (!validateAdminName(adminData.admin_name)) {
+          showNotification('Admin name can only contain letters and spaces', 'error');
+          document.getElementById('adminNameError').style.display = 'block';
           submitButton.disabled = false;
           submitButton.textContent = originalButtonText;
           return;
@@ -1309,6 +1339,14 @@
         // Validate inputs
         if (!document.getElementById('adminName').value.trim()) {
           showNotification('Admin name is required', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+        // Validate admin name
+        if (!validateAdminName(document.getElementById('adminName').value)) {
+          showNotification('Admin name can only contain letters and spaces', 'error');
+          document.getElementById('adminNameError').style.display = 'block';
           submitButton.disabled = false;
           submitButton.textContent = originalButtonText;
           return;
@@ -1407,6 +1445,14 @@
         // Validate inputs
         if (!adminData.admin_name) {
           showNotification('Admin name is required', 'error');
+          submitButton.disabled = false;
+          submitButton.textContent = originalButtonText;
+          return;
+        }
+        // Validate admin name
+        if (!validateAdminName(adminData.admin_name)) {
+          showNotification('Admin name can only contain letters and spaces', 'error');
+          document.getElementById('adminNameError').style.display = 'block';
           submitButton.disabled = false;
           submitButton.textContent = originalButtonText;
           return;

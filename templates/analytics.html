@@ -200,6 +200,7 @@
       min-width: 300px;
       height: 500px;
     }
+      .chart-card { padding: 16px; box-sizing: border-box; }
     .chart-card.narrow { 
       flex: 1;
       min-width: 280px;
@@ -550,13 +551,19 @@
       occupancyChart.destroy();
     }
 
+    // Clamp occupancy values to 0-100 so points never exceed axis range
+    const occupancyClamped = (occupancyRate || []).map(v => {
+      const n = Number(v) || 0;
+      return Math.max(0, Math.min(100, n));
+    });
+
     occupancyChart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: ['12a','1a','2a','3a','4a','5a','6a','7a','8a','9a','10a','11a','12p','1p','2p','3p','4p','5p','6p','7p','8p','9p','10p','11p'],
         datasets: [{
           label: 'Occupancy %',
-          data: occupancyRate,
+          data: occupancyClamped,
           borderColor: '#81c784',
           backgroundColor: 'rgba(129,199,132,0.1)',
           borderWidth: 2.5,
@@ -570,6 +577,9 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: { top: 18, right: 18, bottom: 18, left: 12 }
+        },
         plugins: { 
           legend: { 
             display: true,
@@ -583,8 +593,10 @@
         },
         scales: {
           y: { 
-            min: 0, 
-            max: 100, 
+            min: 0,
+            max: 100,
+            beginAtZero: true,
+            grace: 0,
             ticks: { 
               stepSize: 20, 
               font: { family: 'Nunito', size: 12 },

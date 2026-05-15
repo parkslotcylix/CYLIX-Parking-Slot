@@ -11,34 +11,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Initialize the profile dropdown component
+ * Refresh the shared profile UI from current session storage values
  */
-function initializeProfileDropdown() {
-  // Get session data
+function refreshSharedProfileUI() {
   const adminName = sessionStorage.getItem('user_name') || 'Admin User';
   const adminEmail = sessionStorage.getItem('user_email') || '';
   const accessLevel = sessionStorage.getItem('access_level') || 'admin';
   const status = sessionStorage.getItem('status') || 'active';
   const profilePicture = sessionStorage.getItem('profile_picture') || '/static/images/default-profile.png';
 
-  // Get initials for fallback
   const initials = getInitials(adminName);
-
-  // Get role badge
   const roleBadge = getRoleBadge(accessLevel);
-  
-  // Get status badge
   const statusBadge = getStatusBadge(status);
 
-  // Update profile trigger
   const profileAvatar = document.getElementById('profileAvatar');
   const profileName = document.getElementById('profileName');
   const profileInitials = document.getElementById('profileInitials');
 
   if (profileAvatar) {
     profileAvatar.src = profilePicture;
+    profileAvatar.style.display = profilePicture ? 'block' : 'none';
     profileAvatar.onerror = function() {
-      // If image fails to load, hide image and show initials
       this.style.display = 'none';
       if (profileInitials) {
         profileInitials.textContent = initials;
@@ -49,13 +42,13 @@ function initializeProfileDropdown() {
 
   if (profileInitials) {
     profileInitials.textContent = initials;
+    profileInitials.style.display = profilePicture ? 'none' : 'flex';
   }
 
   if (profileName) {
     profileName.textContent = adminName;
   }
 
-  // Update dropdown content
   const dropdownAdminName = document.getElementById('dropdownAdminName');
   const dropdownAdminEmail = document.getElementById('dropdownAdminEmail');
   const dropdownRoleBadge = document.getElementById('dropdownRoleBadge');
@@ -65,6 +58,15 @@ function initializeProfileDropdown() {
   if (dropdownAdminEmail) dropdownAdminEmail.textContent = adminEmail;
   if (dropdownRoleBadge) dropdownRoleBadge.innerHTML = roleBadge;
   if (dropdownStatusBadge) dropdownStatusBadge.innerHTML = statusBadge;
+}
+
+window.refreshSharedProfileUI = refreshSharedProfileUI;
+
+/**
+ * Initialize the profile dropdown component
+ */
+function initializeProfileDropdown() {
+  refreshSharedProfileUI();
 
   // Setup dropdown toggle
   const profileTrigger = document.getElementById('profileTrigger');
